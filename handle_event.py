@@ -15,6 +15,10 @@ EVENT = sys.argv[2]
 #f = open(sys.argv[1],'r')
 qst_funcs = ['if','elseif','msg','dialog','gobind','break','summonitem','setflag','journal','lawpoints','chaospoints','removeitem','cleardebt','emote','msgnote','newbindpoint','}']
 qst_vars = ['1-','flag','race','class','uclass','urace','deity']
+target_loc = {'adjusthate':0,'aggro':0,'aggrotarget':0,'castspell':1,'casttime':2,'customhit':7,'customhitother':9,'customnuke':8,'customspell':10,'customtextother':0,
+'doattack':0,'doattackround':0,'drainhp':1,'drainmana':1,'loadpet':2,'losecontrol':3,'mobidcast':1,'purgetargetbufftype':1,'sethate':0,'stun':1,'summontarget':0,'swaphate':0,
+'unresistablestun':1,'killpc':0,'playercast':1}
+var_tars = {'auxmeleetarget(self)','auxtarget(self)','fartarget(self)','getowner','highestdamage(self)','lostarget(self)','lowesttarget(self)','meleetarget(self)','nolostarget(self)','petid','primarytarget(self)','ramptarget(self)','randtarget(self)','selfid','userid','substring_0','substring_1','substring_2','substring_3','substring_4','substring_5','substring_6','substring_7','substring_8','substring_9'}
 f = open(str(scriptnum) + EVENT + ".tmp",'r')
 g = open(str(scriptnum) + EVENT + ".tmp",'r')
 outfile = open(str(scriptnum) + EVENT + ".out",'a')
@@ -155,7 +159,7 @@ def do_vars(s):
 	s = s.replace("$ustat(DR)","other:GetStat(\"dr\")")
 	s = s.replace("$urace","other:GetRace()")
 	s = s.replace("$uclass","other:GetClass()")
-	s = s.replace("$userid","other")
+	s = s.replace("$userid","GetID(other)")
 	s = s.replace("$spellid","spellid")
 	s = s.replace("$race","other:GetRaceName()")
 	s = s.replace("$faction","other:GetCon(self)")
@@ -680,6 +684,10 @@ for line, next_line in pairwise(f):
 				outfile.write("\t" * tabs)
 				filler = do_msg_vars(filler)
 				outfile.write("zonetext(self:GetName() .. \" shouts, '" + filler + "'\")" + "\n")
+			elif f == "zonetext":
+				outfile.write("\t" * tabs)
+				filler = do_msg_vars(filler)
+				outfile.write("zonetext(\"" + filler + "\")" + "\n")
 			elif f == "msgnote":
 				outfile.write("\t" * tabs)
 				filler = do_msg_vars(filler)
@@ -749,27 +757,168 @@ for line, next_line in pairwise(f):
 			elif f == "takecash":
 				outfile.write("\t" * tabs)
 				outfile.write("other:takecash(" + filler + ")" + "\n")
-			elif f == "customnuke":
-				filler = do_calcs(filler)
+			elif f == "adjusthate":
 				filler = do_vars(filler)
+				q = target_loc[f]
 				vars = filler.split(",")
-				name = vars[0]
-				damage = vars[1]
-				element = vars[2]
-				resist_adjust = vars[3]
-				range = vars[4]
-				secondary_spell = vars[5]
-				tertiary_spell = vars[6]
-				message = vars[7]
-				target = vars[8]
+				target = vars[q]
+				value = vars[1]
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
 				outfile.write("\t" * tabs)
 				if target == "0":
-					target = "other"
-				outfile.write("self:customnuke(" + target + "," + name + "," + damage + "," + element + "," + resist_adjust + "," + message + "," + secondary_spell + "," + tertiary_spell + ")" + "\n")
-			elif f == "customspell":
-				filler = do_calcs(filler)
+					outfile.write("self:addhate(self:GetTarget()," + value + ")" + "\n")
+				else:
+					outfile.write("self:addhate(" + target + "," + value + ")" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+			elif f == "aggro":
 				filler = do_vars(filler)
+				q = target_loc[f]
 				vars = filler.split(",")
+				target = vars[q]
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				if target == "0":
+					outfile.write("self:addhate(self:GetTarget(),1)" + "\n")
+				else:
+					outfile.write("self:addhate(" + target + ",1)" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+			elif f == "aggrotarget":
+				filler = do_vars(filler)
+				q = target_loc[f]
+				vars = filler.split(",")
+				target = vars[q]
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				if target == "0":
+					outfile.write("self:addhate(self:GetTarget(),1)" + "\n")
+				else:
+					outfile.write("self:addhate(" + target + ",1)" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+			elif f == "casttime":
+				filler = do_vars(filler)
+				q = target_loc[f]
+				vars = filler.split(",")
+				target = vars[q]
+				spell_id = vars[0]
+				time = vars[1]
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				if target == "0":
+					outfile.write("self:castspell(" + spell_id + "," + time + "," + ",self:GetTarget())" + "\n")
+				else:
+					outfile.write("self:castspell(" + spell_id + "," + time + "," + target + ")" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+			elif f == "customhit":
+				filler = do_vars(filler)
+				q = target_loc[f]
+				vars = filler.split(",")
+				target = vars[q]
+				damage = vars[0]
+				skill = vars[1]
+				check_AC = str(vars[2] == "1").lower()
+				check_aux = str(vars[3] == "1").lower()
+				check_hit = str(vars[4] == "1").lower()
+				check_avoid = str(vars[5] == "1").lower()
+				check_mods = str(vars[6] == "1").lower()
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				if target == "0":
+					outfile.write("self:customhit(" + "self:GetTarget()" + "," + skill + "," + check_AC + "," + check_aux + "," + check_hit + "," + check_avoid + "," + check_mods + ")" + "\n")
+				else:
+					outfile.write("self:customhit(" + target + "," + skill + "," + check_AC + "," + check_aux + "," + check_hit + "," + check_avoid + "," + check_mods + ")" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+			elif f == "customhitother":
+				filler = do_vars(filler)
+				q = target_loc[f]
+				vars = filler.split(",")
+				target = vars[q]
+				actor = vars[0]
+				damage = vars[1]
+				skill = vars[2]
+				check_AC = str(vars[3] == "1").lower()
+				check_aux = str(vars[4] == "1").lower()
+				check_hit = str(vars[5] == "1").lower()
+				check_avoid = str(vars[6] == "1").lower()
+				check_mods = str(vars[7] == "1").lower()
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				outfile.write("if GetByID(" + actor + ") then" + "\n")
+				tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				if target == "0":
+					outfile.write("self:customhit(" + "self:GetTarget()" + "," + skill + "," + check_AC + "," + check_aux + "," + check_hit + "," + check_avoid + "," + check_mods + ")" + "\n")
+				else:
+					outfile.write("self:customhit(" + target + "," + skill + "," + check_AC + "," + check_aux + "," + check_hit + "," + check_avoid + "," + check_mods + ")" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+				outfile.write("\t" * tabs)
+				outfile.write("end" + "\n")
+			elif f == "customnuke":
+				filler = do_vars(filler)
+				q = target_loc[f]
+				vars = filler.split(",")
+				target = vars[q]
+				name = vars[0]
+				element = vars[1]
+				resist_adjust = vars[2]
+				range = vars[3]
+				secondary = vars[4]
+				tertiary = vars[5]
+				message = vars[6]
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				if target == "0":
+					outfile.write("self:customnuke(" + "self:GetTarget()" + ",\"\"" + name + "\"\"," + damage + "," + element + "," + resist_adjust + ",\"" + message + "\"," + secondary + "," + tertiary + ")" + "\n")
+				else:
+					outfile.write("self:customnuke(" + target + ",\"" + name + "\"," + damage + "," + element + "," + resist_adjust + ",\"" + message + "\"," + secondary + "," + tertiary + ")" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+			elif f == "customspell":
+				filler = do_vars(filler)
+				q = target_loc[f]
+				vars = filler.split(",")
+				target = vars[q]
+				spell_id = vars[0]
 				name = vars[0]
 				damage = vars[1]
 				element = vars[2]
@@ -780,7 +929,6 @@ for line, next_line in pairwise(f):
 				message = vars[7]
 				coneVal = vars[8]
 				losVal = vars[9]
-				target = vars[10]
 				if target == "0":
 					target = "self"
 				if int(coneVal) == 1:
@@ -795,6 +943,13 @@ for line, next_line in pairwise(f):
 					s_los = "and self:InLos(v) "
 				elif int(coneVal) == 0:
 					s_los = "and not self:InLos(v) "
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
+				if target == "0":
+					target = "self"
 				outfile.write("\t" * tabs)
 				outfile.write("local hl = self:GetHateList(\"entity\")" + "\n")
 				outfile.write("\t" * tabs)
@@ -804,22 +959,361 @@ for line, next_line in pairwise(f):
 				outfile.write("if " + target + ":GetDist(v) <= " + range + s_cone + s_los + " then" + "\n")
 				tabs = tabs + 1
 				outfile.write("\t" * tabs)
-				outfile.write("self:customnuke(v," + name + "," + damage + "," + element + "," + resist_adjust + "," + message + "," + secondary_spell + "," + tertiary_spell + ")" + "\n")
+				outfile.write("self:customnuke(v,\"" + name + "\"," + damage + "," + element + "," + resist_adjust + ",\"" + message + "\"," + secondary_spell + "," + tertiary_spell + ")" + "\n")
 				tabs = tabs - 1
 				outfile.write("\t" * tabs)
 				outfile.write("end" + "\n")
 				tabs = tabs - 1
 				outfile.write("\t" * tabs)
 				outfile.write("end" + "\n")
-			elif f == "castspell":
+			elif f == "doattack":
 				filler = do_vars(filler)
-				spell_id = filler[:int(filler.find(","))]
-				target = filler[int(filler.find(","))+1:]
+				q = target_loc[f]
+				vars = filler.split(",")
+				target = vars[q]
+				damage = "self:GetStat(\"maxdmg\")"
+				skill = "0"
+				check_AC = "true"
+				check_aux = "true"
+				check_hit = "true"
+				check_avoid = "true"
+				check_mods = "true"
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
 				outfile.write("\t" * tabs)
 				if target == "0":
-					outfile.write("self:castspell(" + spell_id + ",other)" + "\n")
+					outfile.write("self:customhit(" + "self:GetTarget()" + "," + skill + "," + check_AC + "," + check_aux + "," + check_hit + "," + check_avoid + "," + check_mods + ")" + "\n")
+				else:
+					outfile.write("self:customhit(" + target + "," + skill + "," + check_AC + "," + check_aux + "," + check_hit + "," + check_avoid + "," + check_mods + ")" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+			elif f == "doattackround":
+				filler = do_vars(filler)
+				q = target_loc[f]
+				vars = filler.split(",")
+				target = vars[q]
+				damage = "self:GetStat(\"maxdmg\")"
+				skill = "0"
+				check_AC = "true"
+				check_aux = "true"
+				check_hit = "true"
+				check_avoid = "true"
+				check_mods = "true"
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				outfile.write("for i=1,self:GetStat(\"attacks\") do")
+				tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				if target == "0":
+					outfile.write("self:customhit(" + "self:GetTarget()" + "," + skill + "," + check_AC + "," + check_aux + "," + check_hit + "," + check_avoid + "," + check_mods + ")" + "\n")
+				else:
+					outfile.write("self:customhit(" + target + "," + skill + "," + check_AC + "," + check_aux + "," + check_hit + "," + check_avoid + "," + check_mods + ")" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+				tabs = tabs - 1
+				outfile.write("\t" * tabs)
+				outfile.write("end" + "\n")
+			elif f == "drainhp":
+				filler = do_vars(filler)
+				q = target_loc[f]
+				vars = filler.split(",")
+				target = vars[q]
+				damage = vars[0]
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				if target == "0":
+					outfile.write("self:customnuke(self:GetTarget(),\"Drain\"," + damage + ",0,0,\"You feel your life force drain away.\",0,0)" + "\n")
+				else:
+					outfile.write("self:customnuke(" + target + ",\"Drain\"," + damage + ",0,0,\"You feel your life force drain away.\",0,0)" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+				outfile.write("self:set(\"hp\",self:GetStat(\"hp\") + " + damage + ")" + "\n")
+			elif f == "drainmana":
+				filler = do_vars(filler)
+				q = target_loc[f]
+				vars = filler.split(",")
+				target = vars[q]
+				damage = vars[0]
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				if target == "0":
+					outfile.write("self:GetTarget():alter(\"mana\",self:GetTarget():GetStat(\"mana\") - " + damage + ")" + "\n")
+				else:
+					outfile.write(target + ":alter(\"mana\",self:GetTarget():GetStat(\"mana\") - " + damage + ")" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+				outfile.write("self:set(\"mana\",self:GetStat(\"mana\") + " + damage + ")" + "\n")
+			elif f == "loadpet":
+				outfile.write("\t" * tabs)
+				outfile.write("-- BAD COMMAND: LOADPET" + "\n")
+			elif f == "losecontrol":
+				filler = do_vars(filler)
+				q = target_loc[f]
+				vars = filler.split(",")
+				target = vars[q]
+				setting = str(vars[0] == "1").lower()
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				if target == "0":
+					outfile.write("--LOSE CONTROL ON SELF? NO." + "\n")
+				else:
+					outfile.write(target + ":freeze(" + setting + ")" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+			elif f == "mobidcast":
+				filler = do_vars(filler)
+				q = target_loc[f]
+				vars = filler.split(",")
+				target = vars[q]
+				spell_id = vars[0]
+				caster = int(vars[2])
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				outfile.write("nl = GetNPCList()" + "\n")
+				outfile.write("\t" * tabs)
+				outfile.write("mob = self" + "\n")
+				outfile.write("\t" * tabs)
+				outfile.write("for k,v in pairs(nl) do" + "\n")
+				tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				outfile.write("if GetNPCID(v) == " + caster + " then" + "\n")
+				tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				outfile.write("mob = caster" + "\n")
+				tabs = tabs - 1
+				outfile.write("\t" * tabs)
+				outfile.write("end" + "\n")
+				tabs = tabs - 1
+				outfile.write("\t" * tabs)
+				outfile.write("end" + "\n")
+				if target == "0":
+					outfile.write("mob:castspell(" + spell_id + ",self:GetTarget())" + "\n")
+				else:
+					outfile.write("mob:castspell(" + spell_id + "," + target + ")" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+			elif f == "purgetargetbufftype":
+				filler = do_vars(filler)
+				q = target_loc[f]
+				vars = filler.split(",")
+				target = vars[q]
+				spell_effect = vars[0]
+				if spell_effect == "22":
+					type = "charm"
+				elif spell_effect == "35":
+					type = "disease"
+				elif spell_effect == "36":
+					type = "poison"
+				elif spell_effect == "40":
+					type = "divineaura"
+				elif spell_effect == "57":
+					type = "levitate"
+				elif spell_effect == "58":
+					type = "illusion"
+				elif spell_effect == "59":
+					type = "damageshield"
+				else:
+					type = "UNKNOWN EFFECT"
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				if target == "0":
+					outfile.write("--ridiculous assertion: PTBT on self" + "\n")
+				else:
+					outfile.write("\t" * tabs)
+					outfile.write("bl = " + target + ":GetBuffs(\"spellid\")" + "\n")
+					outfile.write("\t" * tabs)
+					outfile.write("for k,v in bl do" + "\n")
+					tabs = tabs + 1
+					outfile.write("\t" * tabs)
+					outfile.write("if IsSpellType(v,\"" + type + ") then" + "\n")
+					tabs = tabs + 1
+					outfile.write("\t" * tabs)
+					outfile.write(target + ":removebuff(" + v + ")" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+			elif f == "sethate":
+				filler = do_vars(filler)
+				q = target_loc[f]
+				vars = filler.split(",")
+				target = vars[q]
+				amount = vars[0]
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				if target == "0":
+					outfile.write("self:sethate(self:GetTarget()" + "," + amount + ")" + "\n")
+				else:
+					outfile.write("self:sethate(" + target + "," + amount + ")" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+			elif f == "stun":
+				filler = do_vars(filler)
+				q = target_loc[f]
+				vars = filler.split(",")
+				target = vars[q]
+				duration = vars[0]
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				if target == "0":
+					outfile.write("self:stun(self:GetTarget()," + duration + ")" + "\n")
+				else:
+					outfile.write("self:stun(" + target + "," + duration + ")" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+			elif f == "summontarget":
+				filler = do_vars(filler)
+				q = target_loc[f]
+				vars = filler.split(",")
+				target = vars[q]
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				if target == "0":
+					outfile.write("self:summon(self:GetTarget())" + "\n")
+				else:
+					outfile.write("self:summon(" + target + ")" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+			elif f == "swaphate(userid)":
+				filler = do_vars(filler)
+				q = target_loc[f]
+				vars = filler.split(",")
+				target = vars[q]
+				spell_id = vars[0]
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
+				outfile.write("hl = GetHateList(self,\"entity\"" + "\n" + ")" + "\n")
+				outfile.write("dl = GetHateList(self,\"hate\"" + "\n" + ")" + "\n")
+				outfile.write("max_index = 1" + "\n")
+				outfile.write("max_hate = 0" + "\n")
+				outfile.write("for k,v in pairs(dl) do" + "\n")
+				outfile.write("if v > max_hate then" + "\n")
+				outfile.write("max_hate = v" + "\n")
+				outfile.write("max_index = k" + "\n")
+				outfile.write("end" + "\n")
+				outfile.write("end" + "\n")
+				outfile.write("for k,v in pairs(hl) do" + "\n")
+				outfile.write("if v == GetByID(" + target + " then" + "\n")
+				outfile.write("other_guy_index = k" + "\n")
+				outfile.write("end" + "\n")
+				outfile.write("end" + "\n")
+				outfile.write("if hl[other_guy_index] ~= nil and hl[max_index] ~= nil then" + "\n")
+				outfile.write("self:sethate(hl[other_guy_index],dl[max_index])" + "\n")
+				outfile.write("self:sethate(hl[max_index],dl[other_guy_index])" + "\n")
+				outfile.write("end" + "\n")
+			elif f == "unresistablestun":
+				filler = do_vars(filler)
+				q = target_loc[f]
+				vars = filler.split(",")
+				target = vars[q]
+				duration = vars[0]
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				if target == "0":
+					outfile.write("self:stun(self:GetTarget()," + duration + ",true)" + "\n")
+				else:
+					outfile.write("self:stun(" + target + "," + duration + ",true)" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+			elif f == "killpc":
+				outfile.write("\t" * tabs)
+				outfile.write("-- BAD COMMAND: KILLPC" + "\n")
+			elif f == "playercast":
+				filler = do_vars(filler)
+				q = target_loc[f]
+				vars = filler.split(",")
+				target = vars[q]
+				spell_id = vars[0]
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				if target == "0":
+					outfile.write("self:GetTarget():castspell(" + spell_id + ",self:GetTarget():GetTarget())" + "\n")
+				else:
+					outfile.write("self:GetTarget():castspell(" + spell_id + "," + target + ")" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+			elif f == "castspell":
+				filler = do_vars(filler)
+				q = target_loc[f]
+				vars = filler.split(",")
+				target = vars[q]
+				spell_id = vars[0]
+				if target in var_tars:
+					target = "GetByID(" + target + ")"
+					outfile.write("\t" * tabs)
+					outfile.write("if " + target + " then" + "\n")
+					tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				if target == "0":
+					outfile.write("self:castspell(" + spell_id + ",self:GetTarget())" + "\n")
 				else:
 					outfile.write("self:castspell(" + spell_id + "," + target + ")" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
 			elif f == "movegrp":
 				vars = filler.split(",")
 				zone = "\"" + vars[0] + "\", "
@@ -866,12 +1360,10 @@ for line, next_line in pairwise(f):
 				outfile.write("self:hptrigger(" + filler + ")" + "\n")
 			elif f == "invul":
 				outfile.write("\t" * tabs)
-				if filler == "1":
-					outfile.write("self:invul(true)" + "\n")
-				elif filler == "0":
+				if filler == "0":
 					outfile.write("self:invul(false)" + "\n")
 				else:
-					outfile.write("-- bad invul: " + filler + "\n")
+					outfile.write("self:invul(true)" + "\n")
 			elif f == "uninvul":
 				outfile.write("\t" * tabs)
 				if filler == "0":
@@ -883,7 +1375,7 @@ for line, next_line in pairwise(f):
 					outfile.write("for k,v in pairs(nl) do" + "\n")
 					tabs = tabs + 1
 					outfile.write("\t" * tabs)
-					outfile.write("if v:GetNPCID() == " + filler + "then" + "\n")
+					outfile.write("if v:GetNPCID() == " + filler + " then" + "\n")
 					tabs = tabs + 1
 					outfile.write("\t" * tabs)
 					outfile.write("v:invul(false)" + "\n")
@@ -911,7 +1403,7 @@ for line, next_line in pairwise(f):
 				filler = do_calcs(filler)
 				filler = do_vars(filler)
 				outfile.write("\t" * tabs)
-				outfile.write("substring_" + filler + " = nil" + "\n")
+				outfile.write("substring_" + filler + " = 0" + "\n")
 			elif f == "set":
 				filler = do_calcs(filler)
 				filler = do_vars(filler)

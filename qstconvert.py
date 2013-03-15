@@ -91,24 +91,34 @@ for s in g:
 	if "$script_status" in s:
 		uses_script_status = True
 	if "$substring(0)" in s or "setsubstring(0" in s:
+		targets = True
 		uses_substring_0 = True
 	if "$substring(1)" in s or "setsubstring(1" in s:
+		targets = True
 		uses_substring_1 = True
 	if "$substring(2)" in s or "setsubstring(2" in s:
+		targets = True
 		uses_substring_2 = True
 	if "$substring(3)" in s or "setsubstring(3" in s:
+		targets = True
 		uses_substring_3 = True
 	if "$substring(4)" in s or "setsubstring(4" in s:
+		targets = True
 		uses_substring_4 = True
 	if "$substring(5)" in s or "setsubstring(5" in s:
+		targets = True
 		uses_substring_5 = True
 	if "$substring(6)" in s or "setsubstring(6" in s:
+		targets = True
 		uses_substring_6 = True
 	if "$substring(7)" in s or "setsubstring(7" in s:
+		targets = True
 		uses_substring_7 = True
 	if "$substring(8)" in s or "setsubstring(8" in s:
+		targets = True
 		uses_substring_8 = True
 	if "$substring(9)" in s or "setsubstring(9" in s:
+		targets = True
 		uses_substring_9 = True
 	if "$sex " in s:
 		uses_sex = True
@@ -127,30 +137,43 @@ for s in g:
 	if "EVENT_TRIGGERALL" in s:
 		uses_EVENT_TRIGGERALL = True
 	if "$primarytarget" in s:
+		targets = True
 		uses_primarytarget = True
 	if "$randtarget" in s:
+		targets = True
 		uses_randtarget = True
 	if "$auxtarget" in s:
+		targets = True
 		uses_auxtarget = True
 	if "$highestdamage" in s:
+		targets = True
 		uses_highestdamage = True
 	if "$highestheals" in s:
+		targets = True
 		uses_highestheals = True
 	if "$lowesttarget" in s:
+		targets = True
 		uses_lowesttarget = True
 	if "$ramptarget" in s:
+		targets = True
 		uses_ramptarget = True
 	if "$meleetarget" in s:
+		targets = True
 		uses_meleetarget = True
 	if "$auxmeleetarget" in s:
+		targets = True
 		uses_auxmeleetarget = True
 	if "$fartarget" in s:
+		targets = True
 		uses_fartarget = True
 	if "$lostarget" in s:
+		targets = True
 		uses_lostarget = True
 	if "$nolostarget" in s:
+		targets = True
 		uses_nolostarget = True
 	if "$getdmghate" in s:
+		targets = True
 		uses_getdmghate = True	
 	if "$hatesizetotal" in s:
 		uses_hatesizetotal = True
@@ -165,6 +188,8 @@ for s in g:
 g.close()
 
 for line in f:
+	if len(line) > 1 and line.lstrip()[1] == "#":
+		continue
 	if not in_event and brackets < 1:
 		if re.search(r'^EVENT',line):
 			in_event = True
@@ -220,14 +245,27 @@ for line in f:
 			if re.search('}',line):
 				brackets = brackets - 1
 			lines_read = lines_read + 1
+			if line.rfind("{") < str(len(line)):
+				N.write(line[:line.find("{")].lstrip())
+				line = line[line.find("{"):].lstrip()
 			if lines_read == 2 and not bracket_on_event_line:
 				r = line.find('{')
-				N.write(line[r+1:].lstrip())
+				if line.count(";") < 2:
+					N.write(line[r+1:].lstrip() + "\n")
+				else:
+					expanded = line.split(";")
+					for bit in expanded:
+						N.write(bit.lstrip() + ";\n")
 			else:
 				if line.lstrip()[:1] == "{":
 					N.write("{" + "\n" + line.lstrip()[2:])
 				else:
-					N.write(line.lstrip())
+					if line.count(";") < 2:
+						N.write(str(line.rfind("{")) + line.lstrip() + "\n")
+					else:
+						expanded = line.split(";")
+						for bit in expanded:
+							N.write(bit.lstrip() + ";\n")
 		if brackets == 0 and lines_read >= 3:
 			in_event = False
 			lines_read = 0
@@ -440,34 +478,34 @@ if uses_script_status:
 	FINAL.write("script_status = 0" + "\n")
 
 if uses_substring_0:
-	FINAL.write("substring_0 = nil" + "\n")
+	FINAL.write("substring_0 = 0" + "\n")
 
 if uses_substring_1:
-	FINAL.write("substring_1 = nil" + "\n")
+	FINAL.write("substring_1 = 0" + "\n")
 
 if uses_substring_2:
-	FINAL.write("substring_2 = nil" + "\n")
+	FINAL.write("substring_2 = 0" + "\n")
 
 if uses_substring_3:
-	FINAL.write("substring_3 = nil" + "\n")
+	FINAL.write("substring_3 = 0" + "\n")
 
 if uses_substring_4:
-	FINAL.write("substring_4 = nil" + "\n")
+	FINAL.write("substring_4 = 0" + "\n")
 
 if uses_substring_5:
-	FINAL.write("substring_5 = nil" + "\n")
+	FINAL.write("substring_5 = 0" + "\n")
 
 if uses_substring_6:
-	FINAL.write("substring_6 = nil" + "\n")
+	FINAL.write("substring_6 = 0" + "\n")
 
 if uses_substring_7:
-	FINAL.write("substring_7 = nil" + "\n")
+	FINAL.write("substring_7 = 0" + "\n")
 
 if uses_substring_8:
-	FINAL.write("substring_8 = nil" + "\n")
+	FINAL.write("substring_8 = 0" + "\n")
 
 if uses_substring_9:
-	FINAL.write("substring_9 = nil" + "\n")
+	FINAL.write("substring_9 = 0" + "\n")
 
 if uses_sex:
 	FINAL.write("function sex(self)" + "\n")
@@ -515,220 +553,233 @@ if uses_npc_count:
 
 if uses_primarytarget:
 	FINAL.write("function primarytarget(self)" + "\n")
-	FINAL.write("hl = GetHateList(self,\"entity\")" + "\n")
-	FINAL.write("dl = GetHateList(self,\"hate\")" + "\n")
-	FINAL.write("max_index = 1" + "\n")
-	FINAL.write("max_hate = 0" + "\n")
-	FINAL.write("for k,v in pairs(dl) do" + "\n")
-	FINAL.write("if v > max_hate then" + "\n")
-	FINAL.write("max_hate = v" + "\n")
-	FINAL.write("max_index = k" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("return hl[k]" + "\n")
+	FINAL.write("\t" + "hl = GetHateList(self,\"entity\")" + "\n")
+	FINAL.write("\t" + "dl = GetHateList(self,\"hate\")" + "\n")
+	FINAL.write("\t" + "max_index = 1" + "\n")
+	FINAL.write("\t" + "max_hate = 0" + "\n")
+	FINAL.write("\t" + "for k,v in pairs(dl) do" + "\n")
+	FINAL.write("\t" + "\t" + "if v > max_hate then" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "max_hate = v" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "max_index = k" + "\n")
+	FINAL.write("\t" + "\t" + "end" + "\n")
+	FINAL.write("\t" + "end" + "\n")
+	FINAL.write("\t" + "return GetID(hl[max_index])" + "\n")
 	FINAL.write("end" + "\n")
 
 if uses_randtarget:
 	FINAL.write("function randtarget(self)" + "\n")
-	FINAL.write("hl = GetHateList(self,\"entity\")" + "\n")
-	FINAL.write("return hl[math.random(#hl)]" + "\n")
+	FINAL.write("\t" + "hl = GetHateList(self,\"entity\")" + "\n")
+	FINAL.write("\t" + "return GetID(hl[math.random(#hl)])" + "\n")
 	FINAL.write("end" + "\n")
 
 if uses_auxtarget:
 	FINAL.write("function auxtarget(self)" + "\n")
-	FINAL.write("hl = GetHateList(self,\"entity\")" + "\n")
-	FINAL.write("if #hl == 1 then " + "\n")
-	FINAL.write("return hl[1] " + "\n")
-	FINAL.write("else" + "\n")
-	FINAL.write("return_index = 0" + "\n")
-	FINAL.write("dl = GetHateList(self,\"hate\")" + "\n")
-	FINAL.write("max_index = 1" + "\n")
-	FINAL.write("max_hate = 0" + "\n")
-	FINAL.write("for k,v in pairs(dl) do" + "\n")
-	FINAL.write("if v > max_hate then" + "\n")
-	FINAL.write("max_hate = v" + "\n")
-	FINAL.write("max_index = k" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("repeat" + "\n")
-	FINAL.write("return_index = math.random(#hl)" + "\n")
-	FINAL.write("until return_index ~= max_index" + "\n")
-	FINAL.write("return hl[return_index]" + "\n")
+	FINAL.write("\t" + "hl = GetHateList(self,\"entity\")" + "\n")
+	FINAL.write("\t" + "if #hl == 1 then " + "\n")
+	FINAL.write("\t" + "\t" + "return GetID(hl[1])" + "\n")
+	FINAL.write("\t" + "else" + "\n")
+	FINAL.write("\t" + "\t" + "return_index = 0" + "\n")
+	FINAL.write("\t" + "end" + "\n")
+	FINAL.write("\t" + "dl = GetHateList(self,\"hate\")" + "\n")
+	FINAL.write("\t" + "max_index = 1" + "\n")
+	FINAL.write("\t" + "max_hate = 0" + "\n")
+	FINAL.write("\t" + "for k,v in pairs(dl) do" + "\n")
+	FINAL.write("\t" + "\t" + "if v > max_hate then" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "max_hate = v" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "max_index = k" + "\n")
+	FINAL.write("\t" + "\t" + "end" + "\n")
+	FINAL.write("\t" + "end" + "\n")
+	FINAL.write("\t" + "repeat" + "\n")
+	FINAL.write("\t" + "\t" + "return_index = math.random(#hl)" + "\n")
+	FINAL.write("\t" + "until return_index ~= max_index" + "\n")
+	FINAL.write("\t" + "return GetID(hl[return_index])" + "\n")
 	FINAL.write("end" + "\n")
 
 if uses_highestdamage:
 	FINAL.write("function highestdamage(self)" + "\n")
-	FINAL.write("hl = GetHateList(self,\"entity\")" + "\n")
-	FINAL.write("dl = GetHateList(self,\"damage\")" + "\n")
-	FINAL.write("max_index = 1" + "\n")
-	FINAL.write("max_dmg = 0" + "\n")
-	FINAL.write("for k,v in pairs(dl) do" + "\n")
-	FINAL.write("if v > max_hdmg then" + "\n")
-	FINAL.write("max_hdmg = v" + "\n")
-	FINAL.write("max_index = k" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("return hl[k]" + "\n")
+	FINAL.write("\t" + "hl = GetHateList(self,\"entity\")" + "\n")
+	FINAL.write("\t" + "dl = GetHateList(self,\"damage\")" + "\n")
+	FINAL.write("\t" + "max_index = 1" + "\n")
+	FINAL.write("\t" + "max_dmg = 0" + "\n")
+	FINAL.write("\t" + "for k,v in pairs(dl) do" + "\n")
+	FINAL.write("\t" + "\t" + "if v > max_hdmg then" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "max_hdmg = v" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "max_index = k" + "\n")
+	FINAL.write("\t" + "\t" + "end" + "\n")
+	FINAL.write("\t" + "end" + "\n")
+	FINAL.write("\t" + "return GetID(hl[k])" + "\n")
 	FINAL.write("end" + "\n")
 
 if uses_highestheals:
 	FINAL.write("function highestheals(self)" + "\n")
-	FINAL.write("hl = GetHateList(self,\"healing\")" + "\n")
-	FINAL.write("dl = GetHateList(self,\"damage\")" + "\n")
-	FINAL.write("max_index = 1" + "\n")
-	FINAL.write("max_dmg = 0" + "\n")
-	FINAL.write("for k,v in pairs(dl) do" + "\n")
-	FINAL.write("if v > max_hdmg then" + "\n")
-	FINAL.write("max_hdmg = v" + "\n")
-	FINAL.write("max_index = k" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("return hl[k]" + "\n")
+	FINAL.write("\t" + "hl = GetHateList(self,\"healing\")" + "\n")
+	FINAL.write("\t" + "dl = GetHateList(self,\"damage\")" + "\n")
+	FINAL.write("\t" + "max_index = 1" + "\n")
+	FINAL.write("\t" + "max_dmg = 0" + "\n")
+	FINAL.write("\t" + "for k,v in pairs(dl) do" + "\n")
+	FINAL.write("\t" + "\t" + "if v > max_hdmg then" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "max_hdmg = v" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "max_index = k" + "\n")
+	FINAL.write("\t" + "\t" + "end" + "\n")
+	FINAL.write("\t" + "end" + "\n")
+	FINAL.write("\t" + "return GetID(hl[k])" + "\n")
 	FINAL.write("end" + "\n")
 
 if uses_lowesttarget:
 	FINAL.write("function lowesttarget(self)" + "\n")
-	FINAL.write("hl = GetHateList(self,\"entity\")" + "\n")
-	FINAL.write("dl = GetHateList(self,\"hate\")" + "\n")
-	FINAL.write("min_index = 1" + "\n")
-	FINAL.write("min_hate = 2000000000" + "\n")
-	FINAL.write("for k,v in pairs(dl) do" + "\n")
-	FINAL.write("if v < min_hate then" + "\n")
-	FINAL.write("min_hate = v" + "\n")
-	FINAL.write("min_index = k" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("return hl[k]" + "\n")
+	FINAL.write("\t" + "hl = GetHateList(self,\"entity\")" + "\n")
+	FINAL.write("\t" + "dl = GetHateList(self,\"hate\")" + "\n")
+	FINAL.write("\t" + "min_index = 1" + "\n")
+	FINAL.write("\t" + "min_hate = 2000000000" + "\n")
+	FINAL.write("\t" + "for k,v in pairs(dl) do" + "\n")
+	FINAL.write("\t" + "\t" + "if v < min_hate then" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "min_hate = v" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "min_index = k" + "\n")
+	FINAL.write("\t" + "\t" + "end" + "\n")
+	FINAL.write("\t" + "end" + "\n")
+	FINAL.write("\t" + "return GetID(hl[min_index])" + "\n")
 	FINAL.write("end" + "\n")
 
 if uses_ramptarget:
 	FINAL.write("function ramptarget(self)" + "\n")
-	FINAL.write("hl = GetHateList(self,\"entity\")" + "\n")
-	FINAL.write("for k,v in pairs(hl) do" + "\n")
-	FINAL.write("if k > 1 then" + "\n")
-	FINAL.write("if InCombatRange(self,v) then" + "\n")
-	FINAL.write("return v" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("return hl[1]" + "\n")
+	FINAL.write("\t" + "hl = GetHateList(self,\"entity\")" + "\n")
+	FINAL.write("\t" + "for k,v in pairs(hl) do" + "\n")
+	FINAL.write("\t" + "\t" + "if k > 1 then" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "if InCombatRange(self,v) then" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "\t" + "return GetID(v)" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "end" + "\n")
+	FINAL.write("\t" + "\t" + "end" + "\n")
+	FINAL.write("\t" + "end" + "\n")
+	FINAL.write("\t" + "return GetID(hl[1])" + "\n")
 	FINAL.write("end" + "\n")
 
 if uses_meleetarget:
 	FINAL.write("function meleetarget(self)" + "\n")
-	FINAL.write("hl = GetHateList(self,\"entity\")" + "\n")
-	FINAL.write("candidates = {}" + "\n")
-	FINAL.write("for k,v in pairs(hl) do" + "\n")
-	FINAL.write("if InCombatRange(self,v) then" + "\n")
-	FINAL.write("table.insert(candidates,v)" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("if #candidates < 1 then return hl[1] end" + "\n")
-	FINAL.write("return candidates[math.random(#candidates)]" + "\n")
+	FINAL.write("\t" + "hl = GetHateList(self,\"entity\")" + "\n")
+	FINAL.write("\t" + "candidates = {}" + "\n")
+	FINAL.write("\t" + "for k,v in pairs(hl) do" + "\n")
+	FINAL.write("\t" + "\t" + "if InCombatRange(self,v) then" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "table.insert(candidates,v)" + "\n")
+	FINAL.write("\t" + "\t" + "end" + "\n")
+	FINAL.write("\t" + "end" + "\n")
+	FINAL.write("\t" + "if #candidates < 1 then return hl[1] end" + "\n")
+	FINAL.write("\t" + "return GetID(candidates[math.random(#candidates)])" + "\n")
 	FINAL.write("end" + "\n")
 
 if uses_auxmeleetarget:
 	FINAL.write("function auxmeleetarget(self)" + "\n")
-	FINAL.write("hl = GetHateList(self,\"entity\")" + "\n")
-	FINAL.write("candidates = {}" + "\n")
-	FINAL.write("for k,v in pairs(hl) do" + "\n")
-	FINAL.write("if k > 1 then" + "\n")
-	FINAL.write("if InCombatRange(self,v) then" + "\n")
-	FINAL.write("table.insert(candidates,v)" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("if #candidates < 1 then return hl[1] end" + "\n")
-	FINAL.write("return candidates[math.random(#candidates)]" + "\n")
+	FINAL.write("\t" + "hl = GetHateList(self,\"entity\")" + "\n")
+	FINAL.write("\t" + "candidates = {}" + "\n")
+	FINAL.write("\t" + "for k,v in pairs(hl) do" + "\n")
+	FINAL.write("\t" + "\t" + "if k > 1 then" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "if InCombatRange(self,v) then" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "\t" + "table.insert(candidates,v)" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "end" + "\n")
+	FINAL.write("\t" + "\t" + "end" + "\n")
+	FINAL.write("\t" + "end" + "\n")
+	FINAL.write("\t" + "if #candidates < 1 then return hl[1] end" + "\n")
+	FINAL.write("\t" + "return GetID(candidates[math.random(#candidates)])" + "\n")
 	FINAL.write("end" + "\n")
 
 if uses_fartarget:
 	FINAL.write("function fartarget(self)" + "\n")
-	FINAL.write("hl = GetHateList(self,\"entity\")" + "\n")
-	FINAL.write("candidates = {}" + "\n")
-	FINAL.write("for k,v in pairs(hl) do" + "\n")
-	FINAL.write("if not InCombatRange(self,v) then" + "\n")
-	FINAL.write("table.insert(candidates,v)" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("if #candidates < 1 then return -2 end" + "\n")
-	FINAL.write("return candidates[math.random(#candidates)]" + "\n")
+	FINAL.write("\t" + "hl = GetHateList(self,\"entity\")" + "\n")
+	FINAL.write("\t" + "candidates = {}" + "\n")
+	FINAL.write("\t" + "for k,v in pairs(hl) do" + "\n")
+	FINAL.write("\t" + "\t" + "if not InCombatRange(self,v) then" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "table.insert(candidates,v)" + "\n")
+	FINAL.write("\t" + "\t" + "end" + "\n")
+	FINAL.write("\t" + "end" + "\n")
+	FINAL.write("\t" + "if #candidates < 1 then return -2 end" + "\n")
+	FINAL.write("\t" + "return GetID(candidates[math.random(#candidates)])" + "\n")
 	FINAL.write("end" + "\n")
 
 if uses_lostarget:
 	FINAL.write("function lostarget(self)" + "\n")
-	FINAL.write("hl = GetHateList(self,\"entity\")" + "\n")
-	FINAL.write("candidates = {}" + "\n")
-	FINAL.write("for k,v in pairs(hl) do" + "\n")
-	FINAL.write("if InLos(self,v) then" + "\n")
-	FINAL.write("table.insert(candidates,v)" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("if #candidates < 1 then return hl[1] end" + "\n")
-	FINAL.write("return candidates[math.random(#candidates)]" + "\n")
+	FINAL.write("\t" + "hl = GetHateList(self,\"entity\")" + "\n")
+	FINAL.write("\t" + "candidates = {}" + "\n")
+	FINAL.write("\t" + "for k,v in pairs(hl) do" + "\n")
+	FINAL.write("\t" + "\t" + "if InLos(self,v) then" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "table.insert(candidates,v)" + "\n")
+	FINAL.write("\t" + "\t" + "end" + "\n")
+	FINAL.write("\t" + "end" + "\n")
+	FINAL.write("\t" + "if #candidates < 1 then return hl[1] end" + "\n")
+	FINAL.write("\t" + "return GetID(candidates[math.random(#candidates)])" + "\n")
 	FINAL.write("end" + "\n")
 
 if uses_nolostarget:
 	FINAL.write("function nolostarget(self)" + "\n")
-	FINAL.write("hl = GetHateList(self,\"entity\")" + "\n")
-	FINAL.write("candidates = {}" + "\n")
-	FINAL.write("for k,v in pairs(hl) do" + "\n")
-	FINAL.write("if not InLos(self,v) then" + "\n")
-	FINAL.write("table.insert(candidates,v)" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("if #candidates < 1 then return hl[1] end" + "\n")
-	FINAL.write("return candidates[math.random(#candidates)]" + "\n")
+	FINAL.write("\t" + "hl = GetHateList(self,\"entity\")" + "\n")
+	FINAL.write("\t" + "candidates = {}" + "\n")
+	FINAL.write("\t" + "for k,v in pairs(hl) do" + "\n")
+	FINAL.write("\t" + "\t" + "if not InLos(self,v) then" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "table.insert(candidates,v)" + "\n")
+	FINAL.write("\t" + "\t" + "end" + "\n")
+	FINAL.write("\t" + "end" + "\n")
+	FINAL.write("\t" + "if #candidates < 1 then return hl[1] end" + "\n")
+	FINAL.write("\t" + "return GetID(candidates[math.random(#candidates)])" + "\n")
 	FINAL.write("end" + "\n")
 
 if uses_getdmghate:	
 	FINAL.write("function getdmghate(self,other)" + "\n")
-	FINAL.write("hl = GetHateList(self,\"entity\")" + "\n")
-	FINAL.write("dl = GetHateList(self,\"damage\")" + "\n")
-	FINAL.write("return_index = 1" + "\n")
-	FINAL.write("for k,v in pairs(hl) do" + "\n")
-	FINAL.write("if v == other then" + "\n")
-	FINAL.write("return_index = k" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("return dl[k]" + "\n")
+	FINAL.write("\t" + "hl = GetHateList(self,\"entity\")" + "\n")
+	FINAL.write("\t" + "dl = GetHateList(self,\"damage\")" + "\n")
+	FINAL.write("\t" + "return_index = 1" + "\n")
+	FINAL.write("\t" + "for k,v in pairs(hl) do" + "\n")
+	FINAL.write("\t" + "\t" + "if v == other then" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "return_index = k" + "\n")
+	FINAL.write("\t" + "\t" + "end" + "\n")
+	FINAL.write("\t" + "end" + "\n")
+	FINAL.write("\t" + "return GetID(dl[return_index])" + "\n")
 	FINAL.write("end" + "\n")
 
 if uses_hatesizetotal:
 	FINAL.write("function hatesizetotal(self)" + "\n")
-	FINAL.write("hl = GetHateList(self,\"entity\")" + "\n")
-	FINAL.write("return #hl" + "\n")
+	FINAL.write("\t" + "hl = GetHateList(self,\"entity\")" + "\n")
+	FINAL.write("\t" + "return #hl" + "\n")
 	FINAL.write("end" + "\n")
 
 if uses_hatesizeclients:
 	FINAL.write("function hatesizeclients(self)" + "\n")
-	FINAL.write("hl = GetHateList(self,\"entity\")" + "\n")
-	FINAL.write("clients = {}" + "\n")
-	FINAL.write("for k,v in pairs(hl) do" + "\n")
-	FINAL.write("if IsClient(v) then" + "\n")
-	FINAL.write("table.insert(clients,v)" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("return #clients" + "\n")
+	FINAL.write("\t" + "hl = GetHateList(self,\"entity\")" + "\n")
+	FINAL.write("\t" + "clients = {}" + "\n")
+	FINAL.write("\t" + "for k,v in pairs(hl) do" + "\n")
+	FINAL.write("\t" + "\t" + "if IsClient(v) then" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "table.insert(clients,v)" + "\n")
+	FINAL.write("\t" + "\t" + "end" + "\n")
+	FINAL.write("\t" + "end" + "\n")
+	FINAL.write("\t" + "return #clients" + "\n")
 	FINAL.write("end" + "\n")
 
 if uses_npccorpse_count:
 	FINAL.write("function npccorpse_count(npcid)" + "\n")
-	FINAL.write("cl = GetCorpseList()" + "\n")
-	FINAL.write("total = 0" + "\n")
-	FINAL.write("for k,v in pairs(nl) do" + "\n")
-	FINAL.write("if GetNPCID(v) == npcid then" + "\n")
-	FINAL.write("total = total + 1" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("end" + "\n")
-	FINAL.write("return total" + "\n")
+	FINAL.write("\t" + "cl = GetCorpseList()" + "\n")
+	FINAL.write("\t" + "total = 0" + "\n")
+	FINAL.write("\t" + "for k,v in pairs(nl) do" + "\n")
+	FINAL.write("\t" + "\t" + "if GetNPCID(v) == npcid then" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "total = total + 1" + "\n")
+	FINAL.write("\t" + "\t" + "end" + "\n")
+	FINAL.write("\t" + "end" + "\n")
+	FINAL.write("\t" + "return total" + "\n")
 	FINAL.write("end" + "\n")
 
 if uses_clientcount:
 	FINAL.write("function clientcount()" + "\n")
 	FINAL.write("return #GetClientList()" + "\n")
 	FINAL.write("end" + "\n")
+
+if targets:
+	FINAL.write("function GetByID(id)" + "\n")
+	FINAL.write("\t" + "cl = GetClientList()" + "\n")
+	FINAL.write("\t" + "for k,v in pairs(cl) do" + "\n")
+	FINAL.write("\t" + "\t" + "if GetID(v) = id then" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "return v" + "\n")
+	FINAL.write("\t" + "nl = GetNPCList()" + "\n")
+	FINAL.write("\t" + "for k,v in pairs(cl) do" + "\n")
+	FINAL.write("\t" + "\t" + "if GetID(v) = id then" + "\n")
+	FINAL.write("\t" + "\t" + "\t" + "return v" + "\n")
+	FINAL.write("\t" + "return false" + "\n")
+	FINAL.write("end")	
 
 		
 # for if:

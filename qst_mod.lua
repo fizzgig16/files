@@ -314,3 +314,15 @@ function clientcount()
 	return #GetClientList()
 end
 
+function GetByID(id)
+	cl = GetClientList()
+	for k,v in pairs(cl) do
+		if GetID(v) = id then
+			return v
+	nl = GetNPCList()
+	for k,v in pairs(cl) do
+		if GetID(v) = id then
+			return v
+	return false
+end
+	
