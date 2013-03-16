@@ -15,12 +15,12 @@ EVENT = sys.argv[2]
 #f = open(sys.argv[1],'r')
 qst_funcs = ['if','elseif','msg','dialog','gobind','break','summonitem','setflag','journal','lawpoints','chaospoints','removeitem','cleardebt','emote','msgnote','newbindpoint','}']
 qst_vars = ['1-','flag','race','class','uclass','urace','deity']
-target_loc = {'adjusthate':0,'aggro':0,'aggrotarget':0,'castspell':1,'casttime':2,'customhit':7,'customhitother':9,'customnuke':8,'customspell':10,'customtextother':0,
-'doattack':0,'doattackround':0,'drainhp':1,'drainmana':1,'loadpet':2,'losecontrol':3,'mobidcast':1,'purgetargetbufftype':1,'sethate':0,'stun':1,'summontarget':0,'swaphate':0,
-'unresistablestun':1,'killpc':0,'playercast':1}
+target_loc = {'adjusthate':0,'aggro':0,'aggrotarget':0,'castspell':1,'casttime':2,'customhit':7,'customhitother':9,'customnuke':8,'customspell':10,'customtextother':0,'doattack':0,'doattackround':0,'drainhp':1,'drainmana':1,'loadpet':2,'losecontrol':3,'mobidcast':1,'purgetargetbufftype':1,'sethate':0,'stun':1,'summontarget':0,'swaphate':0,'unresistablestun':1,'killpc':0,'playercast':1}
 var_tars = {'auxmeleetarget(self)','auxtarget(self)','fartarget(self)','getowner','highestdamage(self)','lostarget(self)','lowesttarget(self)','meleetarget(self)','nolostarget(self)','petid','primarytarget(self)','ramptarget(self)','randtarget(self)','selfid','userid','substring_0','substring_1','substring_2','substring_3','substring_4','substring_5','substring_6','substring_7','substring_8','substring_9'}
+flag_funcs = ['flagmove','flaglastnpc','walktoflag','runtoflag','followflag','assault','assaultnorandom']
 f = open(str(scriptnum) + EVENT + ".tmp",'r')
 g = open(str(scriptnum) + EVENT + ".tmp",'r')
+temp_report = open("FUNCTIONS.TXT",'a')
 outfile = open(str(scriptnum) + EVENT + ".out",'a')
 
 brackets = 0
@@ -118,7 +118,7 @@ g.close()
 
 def do_vars(s):
 	s = s.replace("&&","and")
-	s = re.sub(r'\$1\- =~[^"]*(".*")', r'string.find(words,\1)', s)
+	s = re.sub(r'\$1\- =~[^"]*(".*")', r'string.find(words.lower(),\1)', s)
 	s = s.replace("$flag","other:GetFlag")
 	s = re.sub(r'\$random\((\d+)\)', r'math.random(\1) - 1', s)
 	if updates_s0:
@@ -160,6 +160,7 @@ def do_vars(s):
 	s = s.replace("$urace","other:GetRace()")
 	s = s.replace("$uclass","other:GetClass()")
 	s = s.replace("$userid","GetID(other)")
+	s = s.replace("$deity","other:GetStat(\"deity\")")
 	s = s.replace("$spellid","spellid")
 	s = s.replace("$race","other:GetRaceName()")
 	s = s.replace("$faction","other:GetCon(self)")
@@ -309,6 +310,7 @@ def do_calcs(s):
 			s = s.replace("$ustat(CR)","other:GetStat(\"cr\")")
 			s = s.replace("$ustat(PR)","other:GetStat(\"pr\")")
 			s = s.replace("$ustat(DR)","other:GetStat(\"dr\")")
+			s = s.replace("$hpratio","self:GetStat(\"hpratio\")")
 			s = s.replace("$npc_count","NPCCount")
 	return s
 
@@ -657,49 +659,49 @@ for line, next_line in pairwise(f):
 			outfile.write("\t" * tabs)
 			outfile.write("dchance = math.random(100) - 1" + "\n")
 	else:
-		f = line[:int(line.find("("))]
-		if "if" not in f and "}" not in f:
+		f_line = line[:int(line.find("("))]
+		if "if" not in f_line and "}" not in f_line:
 			filler = line[int(line.find("(")) + 1:int(line.find(");"))]
-			if f == "msgtext":
+			if f_line == "msgtext":
 				outfile.write("\t" * tabs)
 				filler = do_msg_vars(filler)
 				outfile.write("self:text(\"" + filler + "\",other)" + "\n")
-			if f == "msg":
+			if f_line == "msg":
 				outfile.write("\t" * tabs)
 				filler = do_msg_vars(filler)
 				outfile.write("self:text(self:GetName() .. \" tells you, '" + filler + "'\",other)" + "\n")
-			elif f == "emote":
+			elif f_line == "emote":
 				outfile.write("\t" * tabs)
 				filler = do_msg_vars(filler)
 				outfile.write("self:text(self:GetName() .. \" " + filler + "\",other)" + "\n")
-			elif f == "text":
+			elif f_line == "text":
 				outfile.write("\t" * tabs)
 				filler = do_msg_vars(filler)
 				outfile.write("self:text(\"" + filler + "\")" + "\n")
-			elif f == "say":
+			elif f_line == "say":
 				outfile.write("\t" * tabs)
 				filler = do_msg_vars(filler)
 				outfile.write("self:text(self:GetName() .. \" says, '" + filler + "'\")" + "\n")
-			elif f == "shout":
+			elif f_line == "shout":
 				outfile.write("\t" * tabs)
 				filler = do_msg_vars(filler)
 				outfile.write("zonetext(self:GetName() .. \" shouts, '" + filler + "'\")" + "\n")
-			elif f == "zonetext":
+			elif f_line == "zonetext":
 				outfile.write("\t" * tabs)
 				filler = do_msg_vars(filler)
 				outfile.write("zonetext(\"" + filler + "\")" + "\n")
-			elif f == "msgnote":
+			elif f_line == "msgnote":
 				outfile.write("\t" * tabs)
 				filler = do_msg_vars(filler)
 				outfile.write("self:text(\"NOTE: " + filler + "\",other,15)" + "\n")
-			elif f == "dialog":
+			elif f_line == "dialog":
 				outfile.write("\t" * tabs)
 				filler = do_msg_vars(filler)
 				outfile.write("other:dialog(self,\"" + filler + "\")" + "\n")
-			elif f == "break":
+			elif f_line == "break":
 				outfile.write("\t" * tabs)
 				outfile.write("return" + "\n")
-			elif f == "summonitem":
+			elif f_line == "summonitem":
 				item_id = filler[:int(filler.find(","))]
 				amt = int(filler[int(filler.find(","))+1:])
 				outfile.write("\t" * tabs)
@@ -707,21 +709,21 @@ for line, next_line in pairwise(f):
 					outfile.write("other:giveitem(" + filler + ")" + "\n")
 				else:
 					outfile.write("other:giveitem(" + item_id + ")" + "\n")
-			elif f == "exp":
+			elif f_line == "exp":
 				outfile.write("\t" * tabs)
 				outfile.write("other:exp(" + filler + ")" + "\n")
-			elif f == "signal":
+			elif f_line == "signal":
 				npc_id = filler[:int(filler.find(","))]
 				val = filler[int(filler.find(","))+1:]
 				outfile.write("\t" * tabs)
 				outfile.write("signal(" + npc_id + "," + val + ",self)" + "\n")
-			elif f == "setglobal":
+			elif f_line == "setglobal":
 				outfile.write("\t" * tabs)
 				outfile.write("setglobal(" + filler + ")" + "\n")
-			elif f == "repopspawn":
+			elif f_line == "repopspawn":
 				outfile.write("\t" * tabs)
 				outfile.write("respawn(" + filler + ")" + "\n")
-			elif f == "scriptstatus":
+			elif f_line == "scriptstatus":
 				outfile.write("\t" * tabs)
 				if filler == "-1":
 					outfile.write("script_status = script_status + 1" + "\n")
@@ -729,37 +731,44 @@ for line, next_line in pairwise(f):
 					filler = do_calcs(filler)
 					filler = do_vars(filler)
 					outfile.write("script_status = " + filler + "\n")
-			elif f == "startscript":
+			elif f_line == "startscript":
 				outfile.write("\t" * tabs)
 				outfile.write("self:timer(\"script\"," + filler + ")" + "\n")
-			elif f == "pulltrigger":
+			elif f_line == "pulltrigger":
 				outfile.write("\t" * tabs)
 				outfile.write("self:timer(\"triggerall\"," + filler + ")" + "\n")
-			elif f == "doanim":
+			elif f_line == "doanim":
 				outfile.write("\t" * tabs)
 				outfile.write("self:doanim(" + filler + ")" + "\n")
-			elif f == "setanim":
+			elif f_line == "setanim":
 				outfile.write("\t" * tabs)
 				outfile.write("self:setanim(" + filler + ")" + "\n")
-			elif f == "setrace":
+			elif f_line == "setrace":
 				outfile.write("\t" * tabs)
 				outfile.write("self:setappearance(" + filler + ")" + "\n")
-			elif f == "wipehate":
+			elif f_line == "setsize":
+				outfile.write("\t" * tabs)
+				outfile.write("self:setsize(" + filler + ")" + "\n")
+			elif f_line == "wipehate":
 				outfile.write("\t" * tabs)
 				outfile.write("self:wipehate()" + "\n")
-			elif f == "depop":
+			elif f_line == "fade":
+				setting = str(filler == "1").lower()
+				outfile.write("\t" * tabs)
+				outfile.write("self:fade(" + setting + ")" + "\n")
+			elif f_line == "depop":
 				if int(filler) == 0:
 					outfile.write("\t" * tabs)
 					outfile.write("self:depop()" + "\n")
 				else:
 					outfile.write("\t" * tabs)
 					outfile.write("depop(" + filler + ")" + "\n")
-			elif f == "takecash":
+			elif f_line == "takecash":
 				outfile.write("\t" * tabs)
 				outfile.write("other:takecash(" + filler + ")" + "\n")
-			elif f == "adjusthate":
+			elif f_line == "adjusthate":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				value = vars[1]
@@ -776,9 +785,9 @@ for line, next_line in pairwise(f):
 					tabs = tabs - 1
 					outfile.write("\t" * tabs)
 					outfile.write("end" + "\n")
-			elif f == "aggro":
+			elif f_line == "aggro":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				if target in var_tars:
@@ -794,9 +803,9 @@ for line, next_line in pairwise(f):
 					tabs = tabs - 1
 					outfile.write("\t" * tabs)
 					outfile.write("end" + "\n")
-			elif f == "aggrotarget":
+			elif f_line == "aggrotarget":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				if target in var_tars:
@@ -812,9 +821,9 @@ for line, next_line in pairwise(f):
 					tabs = tabs - 1
 					outfile.write("\t" * tabs)
 					outfile.write("end" + "\n")
-			elif f == "casttime":
+			elif f_line == "casttime":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				spell_id = vars[0]
@@ -832,9 +841,9 @@ for line, next_line in pairwise(f):
 					tabs = tabs - 1
 					outfile.write("\t" * tabs)
 					outfile.write("end" + "\n")
-			elif f == "customhit":
+			elif f_line == "customhit":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				damage = vars[0]
@@ -857,9 +866,9 @@ for line, next_line in pairwise(f):
 					tabs = tabs - 1
 					outfile.write("\t" * tabs)
 					outfile.write("end" + "\n")
-			elif f == "customhitother":
+			elif f_line == "customhitother":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				actor = vars[0]
@@ -888,9 +897,9 @@ for line, next_line in pairwise(f):
 					outfile.write("end" + "\n")
 				outfile.write("\t" * tabs)
 				outfile.write("end" + "\n")
-			elif f == "customnuke":
+			elif f_line == "customnuke":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				name = vars[0]
@@ -913,9 +922,9 @@ for line, next_line in pairwise(f):
 					tabs = tabs - 1
 					outfile.write("\t" * tabs)
 					outfile.write("end" + "\n")
-			elif f == "customspell":
+			elif f_line == "customspell":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				spell_id = vars[0]
@@ -966,9 +975,9 @@ for line, next_line in pairwise(f):
 				tabs = tabs - 1
 				outfile.write("\t" * tabs)
 				outfile.write("end" + "\n")
-			elif f == "doattack":
+			elif f_line == "doattack":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				damage = "self:GetStat(\"maxdmg\")"
@@ -991,9 +1000,9 @@ for line, next_line in pairwise(f):
 					tabs = tabs - 1
 					outfile.write("\t" * tabs)
 					outfile.write("end" + "\n")
-			elif f == "doattackround":
+			elif f_line == "doattackround":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				damage = "self:GetStat(\"maxdmg\")"
@@ -1022,9 +1031,9 @@ for line, next_line in pairwise(f):
 				tabs = tabs - 1
 				outfile.write("\t" * tabs)
 				outfile.write("end" + "\n")
-			elif f == "drainhp":
+			elif f_line == "drainhp":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				damage = vars[0]
@@ -1042,9 +1051,9 @@ for line, next_line in pairwise(f):
 					outfile.write("\t" * tabs)
 					outfile.write("end" + "\n")
 				outfile.write("self:set(\"hp\",self:GetStat(\"hp\") + " + damage + ")" + "\n")
-			elif f == "drainmana":
+			elif f_line == "drainmana":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				damage = vars[0]
@@ -1062,12 +1071,12 @@ for line, next_line in pairwise(f):
 					outfile.write("\t" * tabs)
 					outfile.write("end" + "\n")
 				outfile.write("self:set(\"mana\",self:GetStat(\"mana\") + " + damage + ")" + "\n")
-			elif f == "loadpet":
+			elif f_line == "loadpet":
 				outfile.write("\t" * tabs)
 				outfile.write("-- BAD COMMAND: LOADPET" + "\n")
-			elif f == "losecontrol":
+			elif f_line == "losecontrol":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				setting = str(vars[0] == "1").lower()
@@ -1084,9 +1093,9 @@ for line, next_line in pairwise(f):
 					tabs = tabs - 1
 					outfile.write("\t" * tabs)
 					outfile.write("end" + "\n")
-			elif f == "mobidcast":
+			elif f_line == "mobidcast":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				spell_id = vars[0]
@@ -1121,9 +1130,9 @@ for line, next_line in pairwise(f):
 					tabs = tabs - 1
 					outfile.write("\t" * tabs)
 					outfile.write("end" + "\n")
-			elif f == "purgetargetbufftype":
+			elif f_line == "purgetargetbufftype":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				spell_effect = vars[0]
@@ -1158,7 +1167,7 @@ for line, next_line in pairwise(f):
 					outfile.write("for k,v in bl do" + "\n")
 					tabs = tabs + 1
 					outfile.write("\t" * tabs)
-					outfile.write("if IsSpellType(v,\"" + type + ") then" + "\n")
+					outfile.write("if IsSpellType(v,\"" + type + "\") then" + "\n")
 					tabs = tabs + 1
 					outfile.write("\t" * tabs)
 					outfile.write(target + ":removebuff(" + v + ")" + "\n")
@@ -1168,12 +1177,12 @@ for line, next_line in pairwise(f):
 					tabs = tabs - 1
 					outfile.write("\t" * tabs)
 					outfile.write("end" + "\n")
-			elif f == "sethate":
+			elif f_line == "sethate":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
-				amount = vars[0]
+				amount = vars[1]
 				if target in var_tars:
 					target = "GetByID(" + target + ")"
 					outfile.write("\t" * tabs)
@@ -1187,9 +1196,9 @@ for line, next_line in pairwise(f):
 					tabs = tabs - 1
 					outfile.write("\t" * tabs)
 					outfile.write("end" + "\n")
-			elif f == "stun":
+			elif f_line == "stun":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				duration = vars[0]
@@ -1206,9 +1215,9 @@ for line, next_line in pairwise(f):
 					tabs = tabs - 1
 					outfile.write("\t" * tabs)
 					outfile.write("end" + "\n")
-			elif f == "summontarget":
+			elif f_line == "summontarget":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				if target in var_tars:
@@ -1224,9 +1233,9 @@ for line, next_line in pairwise(f):
 					tabs = tabs - 1
 					outfile.write("\t" * tabs)
 					outfile.write("end" + "\n")
-			elif f == "swaphate(userid)":
+			elif f_line == "swaphate(userid)":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				spell_id = vars[0]
@@ -1254,9 +1263,9 @@ for line, next_line in pairwise(f):
 				outfile.write("self:sethate(hl[other_guy_index],dl[max_index])" + "\n")
 				outfile.write("self:sethate(hl[max_index],dl[other_guy_index])" + "\n")
 				outfile.write("end" + "\n")
-			elif f == "unresistablestun":
+			elif f_line == "unresistablestun":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				duration = vars[0]
@@ -1273,12 +1282,12 @@ for line, next_line in pairwise(f):
 					tabs = tabs - 1
 					outfile.write("\t" * tabs)
 					outfile.write("end" + "\n")
-			elif f == "killpc":
+			elif f_line == "killpc":
 				outfile.write("\t" * tabs)
 				outfile.write("-- BAD COMMAND: KILLPC" + "\n")
-			elif f == "playercast":
+			elif f_line == "playercast":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				spell_id = vars[0]
@@ -1295,9 +1304,9 @@ for line, next_line in pairwise(f):
 					tabs = tabs - 1
 					outfile.write("\t" * tabs)
 					outfile.write("end" + "\n")
-			elif f == "castspell":
+			elif f_line == "castspell":
 				filler = do_vars(filler)
-				q = target_loc[f]
+				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				spell_id = vars[0]
@@ -1314,7 +1323,7 @@ for line, next_line in pairwise(f):
 					tabs = tabs - 1
 					outfile.write("\t" * tabs)
 					outfile.write("end" + "\n")
-			elif f == "movegrp":
+			elif f_line == "movegrp":
 				vars = filler.split(",")
 				zone = "\"" + vars[0] + "\", "
 				x = vars[1] + ", "
@@ -1343,28 +1352,175 @@ for line, next_line in pairwise(f):
 				tabs = tabs - 1
 				outfile.write("\t" * tabs)
 				outfile.write("end" + "\n")
-			elif f == "faction":
+			elif f_line == "movepc":
+				vars = filler.split(",")
+				zone = "\"" + vars[0] + "\", "
+				x = vars[1] + ", "
+				y = vars[2] + ", "
+				z = vars[3]
+				filler = zone + x + y + z
+				outfile.write("\t" * tabs)
+				outfile.write("other:zone(" + filler + ")" + "\n")
+			elif f_line == "runto":
+				outfile.write("\t" * tabs)
+				outfile.write("self:runto(" + filler + ")" + "\n")
+			elif f_line == "walkto":
+				outfile.write("\t" * tabs)
+				outfile.write("self:walkto(" + filler + ")" + "\n")
+			elif f_line == "runtoheading":
+				outfile.write("\t" * tabs)
+				outfile.write("self:runto(" + filler + ")" + "\n")
+			elif f_line == "walktoheading":
+				outfile.write("\t" * tabs)
+				outfile.write("self:walkto(" + filler + ")" + "\n")
+			elif f_line == "setdmg":
+				outfile.write("\t" * tabs)
+				outfile.write("self:set(\"damage\"," + filler + ")" + "\n")
+			elif f_line == "faction":
 				outfile.write("\t" * tabs)
 				outfile.write("other:faction(" + filler + ")" + "\n")
-			elif f == "setflag":
+			elif f_line == "setflag":
 				outfile.write("\t" * tabs)
 				outfile.write("other:setflag(" + filler + ")" + "\n")
-			elif f == "journal":
+			elif f_line == "journal":
 				outfile.write("\t" * tabs)
 				outfile.write("other:journal(" + filler + ")" + "\n")
-			elif f == "lawpoints":
+			elif f_line == "lawpoints":
 				outfile.write("\t" * tabs)
 				outfile.write("other:setflag(4998, other:GetFlag(4998) + " + filler + ")" + "\n")
-			elif f == "hptrigger":
+			elif f_line == "hptrigger":
 				outfile.write("\t" * tabs)
 				outfile.write("self:hptrigger(" + filler + ")" + "\n")
-			elif f == "invul":
+			elif f_line == "flagreplace":
+				outfile.write("\t" * tabs)
+				outfile.write("flagmobs = {}" + "\n")
+			elif f_line == "unattackable":
+				npc_id = filler
+				if filler == "0":
+					outfile.write("\t" * tabs)
+					outfile.write("self:set(\"cares\",false)" + "\n")
+					outfile.write("\t" * tabs)
+					outfile.write("self:invul(true)" + "\n")
+				else:
+					outfile.write("\t" * tabs)
+					outfile.write("nl = GetNPCList()" + "\n")
+					outfile.write("\t" * tabs)
+					outfile.write("for mob in nl do" + "\n")
+					tabs = tabs + 1
+					outfile.write("\t" * tabs)
+					outfile.write("if GetNPCID(mob) == " + npc_id + " then" + "\n")
+					tabs = tabs + 1
+					outfile.write("\t" * tabs)
+					outfile.write("mob:set(\"cares\",false)" + "\n")
+					outfile.write("\t" * tabs)
+					outfile.write("mob:invul(true)" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+			elif f_line == "attackable":
+				npc_id = filler
+				if filler == "0":
+					outfile.write("\t" * tabs)
+					outfile.write("self:set(\"cares\",true)" + "\n")
+					outfile.write("\t" * tabs)
+					outfile.write("self:invul(false)" + "\n")
+				else:
+					outfile.write("\t" * tabs)
+					outfile.write("nl = GetNPCList()" + "\n")
+					outfile.write("\t" * tabs)
+					outfile.write("for mob in nl do" + "\n")
+					tabs = tabs + 1
+					outfile.write("\t" * tabs)
+					outfile.write("if GetNPCID(mob) == " + npc_id + " then" + "\n")
+					tabs = tabs + 1
+					outfile.write("\t" * tabs)
+					outfile.write("mob:set(\"cares\",true)" + "\n")
+					outfile.write("\t" * tabs)
+					outfile.write("mob:invul(false)" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+			elif f_line == "heal":
+				npc_id = filler
+				if filler == "0":
+					outfile.write("\t" * tabs)
+					outfile.write("self:set(\"hp\",self:GetStat(\"maxhp\"))" + "\n")
+				else:
+					outfile.write("\t" * tabs)
+					outfile.write("nl = GetNPCList()" + "\n")
+					outfile.write("\t" * tabs)
+					outfile.write("for mob in nl do" + "\n")
+					tabs = tabs + 1
+					outfile.write("\t" * tabs)
+					outfile.write("if GetNPCID(mob) == " + npc_id + " then" + "\n")
+					tabs = tabs + 1
+					outfile.write("\t" * tabs)
+					outfile.write("mob:set(\"hp\",mob:GetStat(\"maxhp\"))" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+			elif f_line == "sethpratio":
+				filler = do_calcs(filler)
+				vars = filler.split(",")
+				npc_id = vars[0]
+				amt = vars[1]
+				if filler == "0":
+					outfile.write("\t" * tabs)
+					outfile.write("self:set(\"hp\",self:GetStat(\"maxhp\") * (" + amt + "/100))" + "\n")
+				else:
+					outfile.write("\t" * tabs)
+					outfile.write("nl = GetNPCList()" + "\n")
+					outfile.write("\t" * tabs)
+					outfile.write("for mob in nl do" + "\n")
+					tabs = tabs + 1
+					outfile.write("\t" * tabs)
+					outfile.write("if GetNPCID(mob) == " + npc_id + " then" + "\n")
+					tabs = tabs + 1
+					outfile.write("\t" * tabs)
+					outfile.write("mob:set(\"hp\",mob:GetStat(\"maxhp\") * (" + amt + "/100))" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+					tabs = tabs - 1
+					outfile.write("\t" * tabs)
+					outfile.write("end" + "\n")
+			elif f_line == "flaglastnpc":
+				flag_id = filler
+				outfile.write("\t" * tabs)
+				outfile.write("a.flag = " + flag_id + "\n")
+			elif f_line == "flagmove":
+				vars = filler.split(",")
+				flag_id = vars[0]
+				x = vars[1]
+				y = vars[2]
+				z = vars[3]
+				heading = vars[4]
+				outfile.write("\t" * tabs + "nl = GetNPCList()" + "\n")
+				outfile.write("\t" * tabs + "for mob in nl do" + "\n")
+				tabs = tabs + 1
+				outfile.write("\t" * tabs + "if mob.flag ~= nil and mob.flag == flag_id then" + "\n")
+				tabs = tabs + 1
+				outfile.write("\t" * tabs + "mob:walkto(" + x + "," + y + "," + z + "," + heading + ")" + "\n")
+				tabs = tabs - 1
+				outfile.write("\t" * tabs + "end" + "\n")
+				tabs = tabs - 1
+				outfile.write("\t" * tabs + "end" + "\n")				
+			elif f_line == "invul":
 				outfile.write("\t" * tabs)
 				if filler == "0":
 					outfile.write("self:invul(false)" + "\n")
 				else:
 					outfile.write("self:invul(true)" + "\n")
-			elif f == "uninvul":
+			elif f_line == "uninvul":
 				outfile.write("\t" * tabs)
 				if filler == "0":
 					outfile.write("self:invul(false)" + "\n")
@@ -1385,26 +1541,26 @@ for line, next_line in pairwise(f):
 					tabs = tabs - 1
 					outfile.write("\t" * tabs)
 					outfile.write("end" + "\n")
-			elif f == "increaseflag":
+			elif f_line == "increaseflag":
 				filler = do_calcs(filler)
 				filler = do_vars(filler)
 				flag_id = filler[:int(filler.find(","))]
 				amt = int(filler[int(filler.find(","))+1:])
 				outfile.write("\t" * tabs)
 				outfile.write("other:setflag(" + str(flag_id) + ", other:GetFlag(" + str(flag_id) +") + (" + str(amt) + "))" + "\n")
-			elif f == "setsubstring":
+			elif f_line == "setsubstring":
 				filler = do_calcs(filler)
 				filler = do_vars(filler)
 				substring_id = filler[:int(filler.find(","))]
 				val = filler[int(filler.find(","))+1:]
 				outfile.write("\t" * tabs)
 				outfile.write("substring_" + substring_id + " = " + val + "\n")
-			elif f == "clearsubstring":
+			elif f_line == "clearsubstring":
 				filler = do_calcs(filler)
 				filler = do_vars(filler)
 				outfile.write("\t" * tabs)
 				outfile.write("substring_" + filler + " = 0" + "\n")
-			elif f == "set":
+			elif f_line == "set":
 				filler = do_calcs(filler)
 				filler = do_vars(filler)
 				vars = filler.split(",")
@@ -1413,20 +1569,24 @@ for line, next_line in pairwise(f):
 				val2 = vars[2]
 				outfile.write("\t" * tabs)
 				outfile.write("self:set(\"" + attribute + "\", " + val1 + ", " + val2 + ")" + "\n")
-			elif f == "chaospoints":
+			elif f_line == "chaospoints":
 				outfile.write("\t" * tabs)
 				outfile.write("other:setflag(4999, other:GetFlag(4999) + " + filler + ")" + "\n")
-			elif f == "keepitem":
+			elif f_line == "keepitem":
 				outfile.write("\t" * tabs)
 				outfile.write("items_table(" + filler + ")" + "\n")
-			elif f == "spawnnear":
+			elif f_line == "destroycorpse":
+				outfile.write("\t" * tabs)
+				outfile.write("self:destroycorpse()" + "\n")
+			elif f_line == "spawnnear":
 				filler = do_calcs(filler)
 				filler = do_vars(filler)
 				npc_id = filler[:int(filler.find(","))]
 				time = filler[int(filler.find(","))+1:]
 				outfile.write("\t" * tabs)
+				outfile.write("a = ")
 				outfile.write("spawn(" + npc_id + ", self:GetX() + 3 + math.random(5),self:GetY() + 3 + math.random(5),self:GetZ(),self:GetHeading()," + time + ")" + "\n")
-			elif f == "spawnat":
+			elif f_line == "spawnat":
 				filler = do_calcs(filler)
 				filler = do_vars(filler)
 				vars = filler.split(",")
@@ -1438,14 +1598,46 @@ for line, next_line in pairwise(f):
 				heading = vars[5]
 				time = vars[6]
 				outfile.write("\t" * tabs)
+				outfile.write("a = ")
 				outfile.write("spawn(" + npc_id + "," + x + "," + y + "," + z + "," + heading + "," + time + ")" + "\n")
 				if depop_id > 0:
 					outfile.write("\t" * tabs)
 					outfile.write("depop(" + str(depop_id) + ")" + "\n")
-			elif f == "cleardebt":
+			elif f_line == "spawn":
+				filler = do_calcs(filler)
+				filler = do_vars(filler)
+				vars = filler.split(",")
+				npc_id = vars[0]
+				time = vars[1]
+				outfile.write("\t" * tabs)
+				outfile.write("if other ~= nil then")
+				tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				outfile.write("x = other:GetX()")
+				outfile.write("\t" * tabs)
+				outfile.write("y = other:GetY()")
+				outfile.write("\t" * tabs)
+				outfile.write("z = other:GetZ()")
+				tabs = tabs - 1
+				outfile.write("\t" * tabs)
+				outfile.write("else")
+				tabs = tabs + 1
+				outfile.write("\t" * tabs)
+				outfile.write("x = self:GetX()")
+				outfile.write("\t" * tabs)
+				outfile.write("y = self:GetY()")
+				outfile.write("\t" * tabs)
+				outfile.write("z = self:GetZ()")
+				tabs = tabs - 1
+				outfile.write("\t" * tabs)
+				outfile.write("end")
+				outfile.write("\t" * tabs)
+				outfile.write("a = ")
+				outfile.write("spawn(" + npc_id + ",x,y,z,0," + time + ")" + "\n")
+			elif f_line == "cleardebt":
 				outfile.write("\t" * tabs)
 				outfile.write("other:setexpdebt(0,true)")
-			elif f == "removeitem":
+			elif f_line == "removeitem":
 				item_id = filler[:int(filler.find(","))]
 				amt = int(filler[int(filler.find(","))+1:])
 				outfile.write("\t" * tabs)
@@ -1468,12 +1660,13 @@ for line, next_line in pairwise(f):
 				tabs = tabs - 1
 				outfile.write("\t" * tabs)
 				outfile.write("end" + "\n")
-		elif "}" in f:
+		elif "}" in f_line:
+			print f_line
 			tabs = tabs - 1
-			if not next_line.startswith("else"):
+			if next_line and not next_line.startswith("else"):
 				outfile.write("\t")
 				outfile.write("end" + "\n")
-		elif "if" in f:
+		elif "if" in f_line:
 			if line[2] == " ":
 				filler = line[:line.find('(')] + line[line.find('(')+1:line.rfind(')')]
 			else:
@@ -1485,7 +1678,8 @@ for line, next_line in pairwise(f):
 			tabs = tabs + 1
 		else:
 			outfile.write("FUNCTION NOT FOUND" + "\n")
-
+		temp_report.write(f_line + "\n")
+temp_report.close()		
 if updates_script:
 	outfile.write("\t" + "script_status = check_script_status" + "\n")
 if updates_s0:

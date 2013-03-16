@@ -39,6 +39,7 @@ HP = False
 SLAY = False
 SPELL = False
 ATTACK = False
+targets = False
 uses_buffID = False
 uses_calc = False	
 uses_hasitem = False
@@ -80,6 +81,7 @@ uses_hatesizetotal = False
 uses_hatesizeclients = False
 uses_npccorpse_count = False
 uses_clientcount = False
+uses_flags = False
 	
 g = open(str(scriptnum) + ".qst",'r')
 
@@ -183,7 +185,21 @@ for s in g:
 		uses_npccorpse_count = True
 	if "$clientcount" in s:
 		uses_clientcount = True
-
+	if "flaglastnpc" in s:
+		uses_flags = True
+'''	if "flagmove" in s:
+		uses_flags = True
+	if "walktoflag" in s:
+		uses_flags = True
+	if "runtoflag" in s:
+		uses_flags = True
+	if "followflag" in s:
+		uses_flags = True
+	if "assault" in s:
+		uses_flags = True
+	if "assaultnorandom" in s:
+		uses_flags = True
+'''
 
 g.close()
 
@@ -237,13 +253,15 @@ for line in f:
 			N.write("EVENT_" + event_tag + " {\n")
 			if event_tag == "SPAWN" and uses_EVENT_HP:
 				N.write("hptrigger(90);" + "\n")
+			if event_tag == "SPAWN" and uses_flags:
+				N.write("flagreplace(0);" + "\n")
 				
 	else:
 		if brackets > 0 or lines_read < 3:
 			if re.search('{',line):
 				brackets = brackets + 1
 			if re.search('}',line):
-				brackets = brackets - 1
+				brackets = brackets - line.count("}")
 			lines_read = lines_read + 1
 			if line.rfind("{") < str(len(line)):
 				N.write(line[:line.find("{")].lstrip())
@@ -261,7 +279,7 @@ for line in f:
 					N.write("{" + "\n" + line.lstrip()[2:])
 				else:
 					if line.count(";") < 2:
-						N.write(str(line.rfind("{")) + line.lstrip() + "\n")
+						N.write(line.lstrip() + "\n")
 					else:
 						expanded = line.split(";")
 						for bit in expanded:
@@ -281,9 +299,18 @@ if SPAWN:
 	l = open(str(scriptnum) + 'SPAWN' + ".out",'r')
 	for line in l:
 		FINAL.write(line)
-elif uses_EVENT_HP:
+elif uses_EVENT_HP and not uses_flags:
 	FINAL.write("function EVENT_SPAWN(self)" + "\n")
 	FINAL.write("\t" + "self:hptrigger(90)" + "\n")
+	FINAL.write("end" + "\n" + "\n")
+elif uses_EVENT_HP and uses_flags:
+	FINAL.write("function EVENT_SPAWN(self)" + "\n")
+	FINAL.write("\t" + "self:hptrigger(90)" + "\n")
+	FINAL.write("\t" + "flagmobs = {}" + "\n")
+	FINAL.write("end" + "\n" + "\n")
+elif uses_flags:
+	FINAL.write("function EVENT_SPAWN(self)" + "\n")
+	FINAL.write("\t" + "flagmobs = {}" + "\n")
 	FINAL.write("end" + "\n" + "\n")
 	
 try:
@@ -456,7 +483,7 @@ if uses_buffID:
 	FINAL.write("function HasBuff(mob,spell_id)" + "\n")
 	FINAL.write("\t" + "bl = mob:GetBuffs(\"spellid\")" + "\n")
 	FINAL.write("\t" + "for k,v in pairs(bl) do" + "\n")
-	FINAL.write("\t" + "\t" + "if v = spell_id then" + "\n")
+	FINAL.write("\t" + "\t" + "if v = =spell_id then" + "\n")
 	FINAL.write("\t" + "\t" + "\t" + "return true" + "\n")
 	FINAL.write("\t" + "\t" + "end" + "\n")
 	FINAL.write("\t" + "end" + "\n")
@@ -467,7 +494,7 @@ if uses_hasitem:
 	FINAL.write("function HasItem(mob,item_id)" + "\n")
 	FINAL.write("\t" + "inv = mob:GetInventory()" + "\n")
 	FINAL.write("\t" + "for k,v in pairs(inv) do" + "\n")
-	FINAL.write("\t" + "\t" + "if GetItemID(v) = item_id then" + "\n")
+	FINAL.write("\t" + "\t" + "if GetItemID(v) == item_id then" + "\n")
 	FINAL.write("\t" + "\t" + "\t" + "return 1" + "\n")
 	FINAL.write("\t" + "\t" + "end" + "\n")
 	FINAL.write("\t" + "end" + "\n")
@@ -772,12 +799,16 @@ if targets:
 	FINAL.write("function GetByID(id)" + "\n")
 	FINAL.write("\t" + "cl = GetClientList()" + "\n")
 	FINAL.write("\t" + "for k,v in pairs(cl) do" + "\n")
-	FINAL.write("\t" + "\t" + "if GetID(v) = id then" + "\n")
+	FINAL.write("\t" + "\t" + "if GetID(v) == id then" + "\n")
 	FINAL.write("\t" + "\t" + "\t" + "return v" + "\n")
+	FINAL.write("\t" + "\t" + "end" + "\n")
+	FINAL.write("\t" + "end" + "\n")
 	FINAL.write("\t" + "nl = GetNPCList()" + "\n")
 	FINAL.write("\t" + "for k,v in pairs(cl) do" + "\n")
-	FINAL.write("\t" + "\t" + "if GetID(v) = id then" + "\n")
+	FINAL.write("\t" + "\t" + "if GetID(v) == id then" + "\n")
 	FINAL.write("\t" + "\t" + "\t" + "return v" + "\n")
+	FINAL.write("\t" + "\t" + "end" + "\n")
+	FINAL.write("\t" + "end" + "\n")
 	FINAL.write("\t" + "return false" + "\n")
 	FINAL.write("end")	
 
