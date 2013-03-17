@@ -263,6 +263,8 @@ for line in f:
 			if re.search('}',line):
 				brackets = brackets - line.count("}")
 			lines_read = lines_read + 1
+			while re.search(r'"([0-9\.\-]+)"',line):
+				line = re.sub(r'"([0-9\.\-]+)"', r'\1', line)
 			if line.rfind("{") < str(len(line)):
 				N.write(line[:line.find("{")].lstrip())
 				line = line[line.find("{"):].lstrip()
@@ -287,6 +289,7 @@ for line in f:
 		if brackets == 0 and lines_read >= 3:
 			in_event = False
 			lines_read = 0
+			N.write("\n")
 			N.close()
 
 try:
@@ -812,7 +815,7 @@ if targets:
 	FINAL.write("\t" + "return false" + "\n")
 	FINAL.write("end")	
 
-		
+FINAL.write("\n")	
 # for if:
 # new_line = line[0:line.find('(')] + line[line.find('(')+ 1:line.find(')') + line[line.find(')') + 1:] + ' then'
 

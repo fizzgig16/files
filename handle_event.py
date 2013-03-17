@@ -118,7 +118,7 @@ g.close()
 
 def do_vars(s):
 	s = s.replace("&&","and")
-	s = re.sub(r'\$1\- =~[^"]*(".*")', r'string.find(words.lower(),\1)', s)
+	s = re.sub(r'\$1\- =~[^"]*(".*")', r'string.find(words,string.lower(\1))', s)
 	s = s.replace("$flag","other:GetFlag")
 	s = re.sub(r'\$random\((\d+)\)', r'math.random(\1) - 1', s)
 	if updates_s0:
@@ -178,7 +178,7 @@ def do_vars(s):
 	s = s.replace("$npc_locy","self:GetY()")
 	s = s.replace("$npc_locz","self:GetZ()")
 	s = s.replace("$global(","GetGlobal(")
-	s = s.replace("$signal","signal")
+	s = s.replace("$signal","tonumber(signal)")
 	s = s.replace("$eventratio","self:GetHPTrigger()")
 	s = s.replace("$hpratio","self:GetStat(\"hpratio\")")
 	if updates_script:
@@ -325,6 +325,7 @@ for line, next_line in pairwise(f):
 		elif re.search(r'^EVENT_SAY',line):
 			in_event = True
 			outfile.write("function EVENT_SAY(self, other, words)" + "\n")
+			outfile.write("\t" + "words = string.lower(words)" + "\n")
 			if updates_script:
 				outfile.write("\t" + "check_script_status = script_status" + "\n")
 			if updates_s0:
@@ -718,6 +719,8 @@ for line, next_line in pairwise(f):
 				outfile.write("\t" * tabs)
 				outfile.write("signal(" + npc_id + "," + val + ",self)" + "\n")
 			elif f_line == "setglobal":
+				filler = do_vars(filler)
+				filler = do_calcs(filler)
 				outfile.write("\t" * tabs)
 				outfile.write("setglobal(" + filler + ")" + "\n")
 			elif f_line == "repopspawn":
@@ -1405,7 +1408,7 @@ for line, next_line in pairwise(f):
 					outfile.write("\t" * tabs)
 					outfile.write("nl = GetNPCList()" + "\n")
 					outfile.write("\t" * tabs)
-					outfile.write("for mob in nl do" + "\n")
+					outfile.write("for k,mob in pairs(nl) do" + "\n")
 					tabs = tabs + 1
 					outfile.write("\t" * tabs)
 					outfile.write("if GetNPCID(mob) == " + npc_id + " then" + "\n")
@@ -1431,7 +1434,7 @@ for line, next_line in pairwise(f):
 					outfile.write("\t" * tabs)
 					outfile.write("nl = GetNPCList()" + "\n")
 					outfile.write("\t" * tabs)
-					outfile.write("for mob in nl do" + "\n")
+					outfile.write("for k,mob in pairs(nl) do" + "\n")
 					tabs = tabs + 1
 					outfile.write("\t" * tabs)
 					outfile.write("if GetNPCID(mob) == " + npc_id + " then" + "\n")
@@ -1455,7 +1458,7 @@ for line, next_line in pairwise(f):
 					outfile.write("\t" * tabs)
 					outfile.write("nl = GetNPCList()" + "\n")
 					outfile.write("\t" * tabs)
-					outfile.write("for mob in nl do" + "\n")
+					outfile.write("for k,mob in pairs(nl) do" + "\n")
 					tabs = tabs + 1
 					outfile.write("\t" * tabs)
 					outfile.write("if GetNPCID(mob) == " + npc_id + " then" + "\n")
@@ -1480,7 +1483,7 @@ for line, next_line in pairwise(f):
 					outfile.write("\t" * tabs)
 					outfile.write("nl = GetNPCList()" + "\n")
 					outfile.write("\t" * tabs)
-					outfile.write("for mob in nl do" + "\n")
+					outfile.write("for k,mob in pairs(nl) do" + "\n")
 					tabs = tabs + 1
 					outfile.write("\t" * tabs)
 					outfile.write("if GetNPCID(mob) == " + npc_id + " then" + "\n")
@@ -1505,7 +1508,7 @@ for line, next_line in pairwise(f):
 				z = vars[3]
 				heading = vars[4]
 				outfile.write("\t" * tabs + "nl = GetNPCList()" + "\n")
-				outfile.write("\t" * tabs + "for mob in nl do" + "\n")
+				outfile.write("\t" * tabs + "for k,mob in pairs(nl) do" + "\n")
 				tabs = tabs + 1
 				outfile.write("\t" * tabs + "if mob.flag ~= nil and mob.flag == flag_id then" + "\n")
 				tabs = tabs + 1
@@ -1661,11 +1664,10 @@ for line, next_line in pairwise(f):
 				outfile.write("\t" * tabs)
 				outfile.write("end" + "\n")
 		elif "}" in f_line:
-			print f_line
 			tabs = tabs - 1
 			if next_line and not next_line.startswith("else"):
-				outfile.write("\t")
-				outfile.write("end" + "\n")
+				outfile.write("\t" * tabs)
+				outfile.write(("end" + "\n") * line.count("}"))
 		elif "if" in f_line:
 			if line[2] == " ":
 				filler = line[:line.find('(')] + line[line.find('(')+1:line.rfind(')')]
@@ -1675,13 +1677,14 @@ for line, next_line in pairwise(f):
 			filler = do_vars(filler)
 			outfile.write("\t")
 			outfile.write(filler + " then" + "\n")
+			bracket = brackets + 1
 			tabs = tabs + 1
 		else:
 			outfile.write("FUNCTION NOT FOUND" + "\n")
 		temp_report.write(f_line + "\n")
 temp_report.close()		
-if updates_script:
-	outfile.write("\t" + "script_status = check_script_status" + "\n")
+#if updates_script:
+	#outfile.write("\t" + "script_status = check_script_status" + "\n")
 if updates_s0:
 	outfile.write("\t" + "substring_0 = check_substring_0" + "\n")
 if updates_s1:
@@ -1713,7 +1716,7 @@ if EVENT == "SAY" or EVENT == "AGGROSAY":
 if EVENT == "HP":			
 	outfile.write("\t" + "self:hptrigger(self:GetHPTrigger() - 10)" + "\n" + "\n")
 
-outfile.write("end" + "\n" + "\n")
+#outfile.write("end" + "\n" + "\n")
 
 
 outfile.close()
