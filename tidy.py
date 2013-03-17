@@ -10,9 +10,11 @@ for line in in_file:
 		tabs = tabs - 1
 	if re.search(r'^until',line.lstrip()):
 		tabs = tabs - 1
+	if re.search(r'^else',line.lstrip()):
+		tabs = tabs - 1
 	if tabs < 0:
 		tabs = 0
 	out_file.write("\t" * tabs + line.lstrip())
-	if re.search(r'^if',line) or re.search(r'^for',line) or re.search(r'^function',line) or re.search(r'^repeat',line) or re.search(r'^while',line):
+	if re.search(r'^if',line) or re.search(r'^for',line) or re.search(r'^function',line) or re.search(r'^repeat',line) or re.search(r'^while',line) or re.search(r'^else',line):
 		if "end" not in line:
 			tabs = tabs + 1

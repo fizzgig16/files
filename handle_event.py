@@ -1322,19 +1322,19 @@ for line, next_line in pairwise(f):
 				vars = filler.split(",")
 				npc_id = vars[0]
 				time = vars[1]
-				outfile.write("if other ~= nil then")
-				outfile.write("x = other:GetX()")
-				outfile.write("y = other:GetY()")
-				outfile.write("z = other:GetZ()")
-				outfile.write("else")
-				outfile.write("x = self:GetX()")
-				outfile.write("y = self:GetY()")
-				outfile.write("z = self:GetZ()")
-				outfile.write("end")
+				outfile.write("if other ~= nil then" + "\n")
+				outfile.write("x = other:GetX()" + "\n")
+				outfile.write("y = other:GetY()" + "\n")
+				outfile.write("z = other:GetZ()" + "\n")
+				outfile.write("else" + "\n")
+				outfile.write("x = self:GetX()" + "\n")
+				outfile.write("y = self:GetY()" + "\n")
+				outfile.write("z = self:GetZ()" + "\n")
+				outfile.write("end" + "\n")
 				outfile.write("a = ")
 				outfile.write("spawn(" + npc_id + ",x,y,z,0," + time + ")" + "\n")
 			elif f_line == "cleardebt":
-				outfile.write("other:setexpdebt(0,true)")
+				outfile.write("other:setexpdebt(0,true)" + "\n")
 			elif f_line == "removeitem":
 				item_id = filler[:int(filler.find(","))]
 				amt = int(filler[int(filler.find(","))+1:])
