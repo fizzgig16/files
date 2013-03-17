@@ -21,7 +21,8 @@ except IOError as e:
    print 'Oh dear.'
  
 f = open(str(scriptnum) + ".qst",'r')
-FINAL = open(str(scriptnum) + ".lua",'a')
+FINAL = open(str(scriptnum) + ".old",'a')
+
 brackets = 0
 in_event = False
 lines_read = 0
@@ -315,6 +316,7 @@ elif uses_flags:
 	FINAL.write("function EVENT_SPAWN(self)" + "\n")
 	FINAL.write("\t" + "flagmobs = {}" + "\n")
 	FINAL.write("end" + "\n" + "\n")
+	l.close()
 	
 try:
    with open(str(scriptnum) + 'SCRIPT' + ".tmp") as SCRIPT: pass
@@ -335,6 +337,7 @@ if SCRIPT:
 			if lines_read < size-2:
 				FINAL.write(line)
 			lines_read = lines_read + 1
+	l.close()
 		
 try:
    with open(str(scriptnum) + 'TRIGGERALL' + ".tmp") as TRIGGERALL: pass
@@ -355,6 +358,7 @@ if TRIGGERALL:
 			if lines_read > 0 and lines_read < size:
 				FINAL.write(line)
 			lines_read = lines_read + 1
+	l.close()
 		
 try:
    with open(str(scriptnum) + 'SAY' + ".tmp") as SAY: pass
@@ -374,6 +378,7 @@ if SAY:
 			if lines_read > 0 and lines_read < size:
 				FINAL.write(line)
 			lines_read = lines_read + 1
+	l.close()
 
 try:
    with open(str(scriptnum) + 'AGGROSAY' + ".tmp") as AGGROSAY: pass
@@ -393,6 +398,7 @@ if AGGROSAY:
 			if lines_read > 0 and lines_read < size:
 				FINAL.write(line)
 			lines_read = lines_read + 1
+	l.close()
 
 try:
    with open(str(scriptnum) + 'ITEM' + ".tmp") as ITEM: pass
@@ -404,6 +410,7 @@ if ITEM:
 	l = open(str(scriptnum) + 'ITEM' + ".out",'r')
 	for line in l:
 		FINAL.write(line)
+	l.close()
 		
 try:
    with open(str(scriptnum) + 'SIGNAL' + ".tmp") as SIGNAL: pass
@@ -415,6 +422,7 @@ if SIGNAL:
 	l = open(str(scriptnum) + 'SIGNAL' + ".out",'r')
 	for line in l:
 		FINAL.write(line)
+	l.close()
 
 try:
    with open(str(scriptnum) + 'COMBATEND' + ".tmp") as COMBATEND: pass
@@ -426,6 +434,7 @@ if COMBATEND:
 	l = open(str(scriptnum) + 'COMBATEND' + ".out",'r')
 	for line in l:
 		FINAL.write(line)
+	l.close()
 
 try:
    with open(str(scriptnum) + 'HP' + ".tmp") as HP: pass
@@ -437,6 +446,7 @@ if HP:
 	l = open(str(scriptnum) + 'HP' + ".out",'r')
 	for line in l:
 		FINAL.write(line)
+	l.close()
 
 try:
    with open(str(scriptnum) + 'DEATH' + ".tmp") as DEATH: pass
@@ -448,6 +458,7 @@ if DEATH:
 	l = open(str(scriptnum) + 'DEATH' + ".out",'r')
 	for line in l:
 		FINAL.write(line)
+	l.close()
 
 try:
    with open(str(scriptnum) + 'ATTACK' + ".tmp") as ATTACK: pass
@@ -459,6 +470,7 @@ if ATTACK:
 	l = open(str(scriptnum) + 'ATTACK' + ".out",'r')
 	for line in l:
 		FINAL.write(line)
+	l.close()
 
 try:
    with open(str(scriptnum) + 'SLAY' + ".tmp") as SLAY: pass
@@ -470,6 +482,7 @@ if SLAY:
 	l = open(str(scriptnum) + 'SLAY' + ".out",'r')
 	for line in l:
 		FINAL.write(line)
+	l.close()
 
 try:
    with open(str(scriptnum) + 'SPELL' + ".tmp") as SPELL: pass
@@ -481,7 +494,8 @@ if SPELL:
 	l = open(str(scriptnum) + 'SPELL' + ".out",'r')
 	for line in l:
 		FINAL.write(line)
-
+	l.close()
+	
 if uses_buffID:
 	FINAL.write("function HasBuff(mob,spell_id)" + "\n")
 	FINAL.write("\t" + "bl = mob:GetBuffs(\"spellid\")" + "\n")
@@ -815,7 +829,12 @@ if targets:
 	FINAL.write("\t" + "return false" + "\n")
 	FINAL.write("end")	
 
-FINAL.write("\n")	
+FINAL.write("\n")
+FINAL.close()	
+system("tidy.py " + str(scriptnum))
+system("del " + str(scriptnum) + "*.tmp")
+system("del " + str(scriptnum) + "*.out")
+system("del " + str(scriptnum) + "*.old")
 # for if:
 # new_line = line[0:line.find('(')] + line[line.find('(')+ 1:line.find(')') + line[line.find(')') + 1:] + ' then'
 
