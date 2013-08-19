@@ -18,3 +18,6 @@ for line in in_file:
 	if re.search(r'^if',line) or re.search(r'^for',line) or re.search(r'^function',line) or re.search(r'^repeat',line) or re.search(r'^while',line) or re.search(r'^else',line):
 		if "end" not in line:
 			tabs = tabs + 1
+
+in_file.close()
+out_file.close

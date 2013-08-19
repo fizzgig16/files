@@ -150,6 +150,11 @@ def do_vars(s):
 	s = s.replace("$urace","other:GetRace()")
 	s = s.replace("$uclass","other:GetClass()")
 	s = s.replace("$userid","GetID(other)")
+	s = s.replace("$selfid","self")
+	s = s.replace("$chance","chance")
+	s = s.replace("$bchance","bchance")
+	s = s.replace("$cchance","cchance")
+	s = s.replace("$dchance","dchance")
 	s = s.replace("$deity","other:GetStat(\"deity\")")
 	s = s.replace("$spellid","spellid")
 	s = s.replace("$race","other:GetRaceName()")
@@ -169,7 +174,7 @@ def do_vars(s):
 	s = s.replace("$npc_locz","self:GetZ()")
 	s = s.replace("$global(","GetGlobal(")
 	s = s.replace("$signal","tonumber(signal)")
-	s = s.replace("$eventratio","self:GetHPTrigger()")
+	s = s.replace("$eventratio","tmp_hptrigger")
 	s = s.replace("$hpratio","self:GetStat(\"hpratio\")")
 	if updates_script:
 		s = s.replace("$script_status","check_script_status")
@@ -260,6 +265,7 @@ def do_msg_calcs(s):
 				s = s.replace(calc_string, calc_string[6:offset-1])
 			changes = changes + 1
 			s = s.replace("$flag","other:GetFlag")
+			s = s.replace("$name","other:GetName()")
 			s = re.sub(r'\$ustat\((\w+)\) == 1', r'other:GetStat(\1)', s)
 			s = s.replace("$npc_count","NPCCount")
 	return s
@@ -307,6 +313,7 @@ for line, next_line in pairwise(f):
 			in_event = True
 			outfile.write("function EVENT_SAY(self, other, words)" + "\n")
 			outfile.write("words = string.lower(words)" + "\n")
+			outfile.write("self:face(other)" + "\n")
 			if updates_script:
 				outfile.write("check_script_status = script_status" + "\n")
 			if updates_s0:
@@ -492,6 +499,8 @@ for line, next_line in pairwise(f):
 		elif re.search(r'^EVENT_HP',line):
 			in_event = True
 			outfile.write("function EVENT_HP(self, other, damage)" + "\n")
+			outfile.write("tmp_hptrigger = self:GetHPTrigger()" + "\n")
+			outfile.write("self:hptrigger(self:GetHPTrigger() - 10)" + "\n")
 			if updates_script:
 				outfile.write("check_script_status = script_status" + "\n")
 			if updates_s0:
@@ -634,7 +643,7 @@ for line, next_line in pairwise(f):
 				outfile.write("self:text(self:GetName() .. \" tells you, '" + filler + "'\",other)" + "\n")
 			elif f_line == "emote":
 				filler = do_msg_vars(filler)
-				outfile.write("self:text(self:GetName() .. \" " + filler + "\",other)" + "\n")
+				outfile.write("self:text(self:GetName() .. \" " + filler + "\")" + "\n")
 			elif f_line == "text":
 				filler = do_msg_vars(filler)
 				outfile.write("self:text(\"" + filler + "\")" + "\n")
@@ -673,6 +682,8 @@ for line, next_line in pairwise(f):
 				filler = do_calcs(filler)
 				outfile.write("setglobal(" + filler + ")" + "\n")
 			elif f_line == "repopspawn":
+				filler = do_vars(filler)
+				filler = do_calcs(filler)
 				outfile.write("respawn(" + filler + ")" + "\n")
 			elif f_line == "scriptstatus":
 				if filler == "-1":
@@ -691,6 +702,8 @@ for line, next_line in pairwise(f):
 				outfile.write("self:setanim(" + filler + ")" + "\n")
 			elif f_line == "setrace":
 				outfile.write("self:setappearance(" + filler + ")" + "\n")
+			elif f_line == "setappearance":
+				outfile.write("setappearance(" + filler + ")" + "\n")
 			elif f_line == "setsize":
 				outfile.write("self:setsize(" + filler + ")" + "\n")
 			elif f_line == "wipehate":
@@ -757,13 +770,13 @@ for line, next_line in pairwise(f):
 					outfile.write("if " + target + " then" + "\n")
 				if target == "0":
 					outfile.write("if other ~= nil then" + "\n")
-					outfile.write("self:castspell(" + spell_id + "," + time + "," + ",other)" + "\n")
+					outfile.write("self:cast(" + spell_id + ", other, " + time + ")" + "\n")
 					outfile.write("elseif self:GetTarget() then" + "\n")
-					outfile.write("self:castspell(" + spell_id + "," + time + "," + ",self:GetTarget())" + "\n")
-					outfile.write("else self:castspell(" + spell_id + "," + time + "," + ",self) end" + "\n")
-				else:
-					outfile.write("self:castspell(" + spell_id + "," + time + "," + target + ")" + "\n")
+					outfile.write("self:cast(" + spell_id + ", self:GetTarget(), " + time + ")" + "\n")
+					outfile.write("else self:cast(" + spell_id + ", self, " + time + ") end" + "\n")
 					outfile.write("end" + "\n")
+				else:
+					outfile.write("self:cast(" + spell_id + "," + target + ", " + time + ")" + "\n")
 			elif f_line == "customhit":
 				filler = do_vars(filler)
 				q = target_loc[f_line]
@@ -809,23 +822,25 @@ for line, next_line in pairwise(f):
 				outfile.write("end" + "\n")
 			elif f_line == "customnuke":
 				filler = do_vars(filler)
+				filler = do_calcs(filler)
 				q = target_loc[f_line]
 				vars = filler.split(",")
 				target = vars[q]
 				name = vars[0]
-				element = vars[1]
-				resist_adjust = vars[2]
-				range = vars[3]
-				secondary = vars[4]
-				tertiary = vars[5]
-				message = vars[6]
+				damage = vars[1]
+				element = vars[2]
+				resist_adjust = vars[3]
+				range = vars[4]
+				secondary = vars[5]
+				tertiary = vars[6]
+				message = vars[7]
 				if target in var_tars:
 					target = "GetByID(" + target + ")"
 					outfile.write("if " + target + " then" + "\n")
 				if target == "0":
-					outfile.write("self:customnuke(" + "self:GetTarget()" + ",\"\"" + name + "\"\"," + damage + "," + element + "," + resist_adjust + ",\"" + message + "\"," + secondary + "," + tertiary + ")" + "\n")
+					outfile.write("self:customnuke(" + "self:GetTarget()" + "," + name + "," + damage + "," + element + "," + resist_adjust + "," + message + "," + secondary + "," + tertiary + ")" + "\n")
 				else:
-					outfile.write("self:customnuke(" + target + ",\"" + name + "\"," + damage + "," + element + "," + resist_adjust + ",\"" + message + "\"," + secondary + "," + tertiary + ")" + "\n")
+					outfile.write("self:customnuke(" + target + "," + name + "," + damage + "," + element + "," + resist_adjust + "," + message + "," + secondary + "," + tertiary + ")" + "\n")
 					outfile.write("end" + "\n")
 			elif f_line == "customspell":
 				filler = do_vars(filler)
@@ -974,9 +989,9 @@ for line, next_line in pairwise(f):
 				outfile.write("end" + "\n")
 				outfile.write("end" + "\n")
 				if target == "0":
-					outfile.write("mob:castspell(" + spell_id + ",self:GetTarget())" + "\n")
+					outfile.write("mob:cast(" + spell_id + ",self:GetTarget())" + "\n")
 				else:
-					outfile.write("mob:castspell(" + spell_id + "," + target + ")" + "\n")
+					outfile.write("mob:cast(" + spell_id + "," + target + ")" + "\n")
 					outfile.write("end" + "\n")
 			elif f_line == "purgetargetbufftype":
 				filler = do_vars(filler)
@@ -1049,9 +1064,9 @@ for line, next_line in pairwise(f):
 					target = "GetByID(" + target + ")"
 					outfile.write("if " + target + " then" + "\n")
 				if target == "0":
-					outfile.write("self:summon(self:GetTarget())" + "\n")
+					outfile.write("self:GetTarget():teleport(self)" + "\n")
 				else:
-					outfile.write("self:summon(" + target + ")" + "\n")
+					outfile.write(target + ":teleport(self)" + "\n")
 					outfile.write("end" + "\n")
 			elif f_line == "swaphate(userid)":
 				filler = do_vars(filler)
@@ -1098,12 +1113,29 @@ for line, next_line in pairwise(f):
 			elif f_line == "killpc":
 				outfile.write("-- BAD COMMAND: KILLPC" + "\n")
 			elif f_line == "telerandom":
+				if filler == "0":
+					filler = "50"
 				outfile.write("repeat" + "\n")
-				outfile.write("x = self:GetX() + (filler / 2) + math.random(filler / 2)" + "\n")
-				outfile.write("y = self:GetX() + (filler / 2) + math.random(filler / 2)" + "\n")
+				outfile.write("x = self:GetX() + math.pow(-1,math.random(2)) * ((" + filler + "/ 2) + math.random(" + filler + " / 2))" + "\n")
+				outfile.write("y = self:GetY() + math.pow(-1,math.random(2)) * ((" + filler + "/ 2) + math.random(" + filler + " / 2))	" + "\n")
 				outfile.write("z = self:GetZ()" + "\n")
 				outfile.write("until self:InCoordLos(x,y,z)" + "\n")
-				outfile.write("self:teleto(x,y,z)" + "\n")
+				outfile.write("self:teleport(x,y,z,self:GetHeading())" + "\n")
+			elif f_line == "teleto":
+				vars = filler.split(",")
+				x = vars[0]
+				y = vars[1]
+				z = vars[2]
+				outfile.write("self:teleport(" + x + "," + y + "," + z + ",self:GetHeading())" + "\n")
+			elif f_line == "gmmove":
+				vars = filler.split(",")
+				x = vars[0]
+				y = vars[1]
+				z = vars[2]
+				outfile.write("if other ~= nil then" + "\n")
+				outfile.write("other:teleport(" + x + "," + y + "," + z + ",self:GetHeading())" + "\n")
+				outfile.write("else" + "\n")
+				outfile.write("self:GetTarget():teleport(" + x + "," + y + "," + z + ",self:GetHeading())" + "\n")
 			elif f_line == "playercast":
 				filler = do_vars(filler)
 				q = target_loc[f_line]
@@ -1114,9 +1146,9 @@ for line, next_line in pairwise(f):
 					target = "GetByID(" + target + ")"
 					outfile.write("if " + target + " then" + "\n")
 				if target == "0":
-					outfile.write("self:GetTarget():castspell(" + spell_id + ",self:GetTarget():GetTarget())" + "\n")
+					outfile.write("self:GetTarget():cast(" + spell_id + ",self:GetTarget():GetTarget())" + "\n")
 				else:
-					outfile.write("self:GetTarget():castspell(" + spell_id + "," + target + ")" + "\n")
+					outfile.write("self:GetTarget():cast(" + spell_id + "," + target + ")" + "\n")
 					outfile.write("end" + "\n")
 			elif f_line == "castspell":
 				filler = do_vars(filler)
@@ -1129,12 +1161,12 @@ for line, next_line in pairwise(f):
 					outfile.write("if " + target + " then" + "\n")
 				if target == "0":
 					outfile.write("if other ~= nil then" + "\n")
-					outfile.write("self:castspell(" + spell_id + ",other)" + "\n")
+					outfile.write("self:cast(" + spell_id + ",other)" + "\n")
 					outfile.write("elseif self:GetTarget() then" + "\n")
-					outfile.write("self:castspell(" + spell_id + ",self:GetTarget())" + "\n")
-					outfile.write("else self:castspell(" + spell_id + ",self) end" + "\n")
+					outfile.write("self:cast(" + spell_id + ",self:GetTarget())" + "\n")
+					outfile.write("else self:cast(" + spell_id + ",self) end" + "\n")
 				else:
-					outfile.write("self:castspell(" + spell_id + "," + target + ")" + "\n")
+					outfile.write("self:cast(" + spell_id + "," + target + ")" + "\n")
 					outfile.write("end" + "\n")
 			elif f_line == "movegrp":
 				vars = filler.split(",")
@@ -1172,6 +1204,8 @@ for line, next_line in pairwise(f):
 			elif f_line == "faction":
 				outfile.write("other:faction(" + filler + ")" + "\n")
 			elif f_line == "setflag":
+				filler = do_vars(filler)
+				filler = do_calcs(filler)
 				outfile.write("other:setflag(" + filler + ")" + "\n")
 			elif f_line == "journal":
 				outfile.write("other:journal(" + filler + ")" + "\n")
@@ -1357,7 +1391,7 @@ for line, next_line in pairwise(f):
 				filler = line[:line.find('(')] + " " + line[line.find('(')+1:line.rfind(')')]
 			filler = do_calcs(filler)
 			filler = do_vars(filler)
-			outfile.write("\t")
+			#outfile.write("\t")
 			outfile.write(filler + " then" + "\n")
 			bracket = brackets + 1
 		else:
@@ -1387,10 +1421,10 @@ if updates_s8:
 if updates_s9:
 	outfile.write("substring_9 = check_substring_9" + "\n")
 if EVENT == "SCRIPT" or EVENT == "TRIGGERALL":
-	outfile.write("end" + "\n" + "\n")
+	outfile.write("end" + "\n")
+if EVENT == "TRIGGERALL":
+	outfile.write("end" + "\n")
 if EVENT == "SAY" or EVENT == "AGGROSAY":
 	outfile.write("end" + "\n" + "\n")
-if EVENT == "HP":
-	outfile.write("self:hptrigger(self:GetHPTrigger() - 10)" + "\n" + "\n")
 #outfile.write("end" + "\n" + "\n")
 outfile.close()

@@ -303,20 +303,12 @@ if SPAWN:
 	l = open(str(scriptnum) + 'SPAWN' + ".out",'r')
 	for line in l:
 		FINAL.write(line)
-elif uses_EVENT_HP and not uses_flags:
-	FINAL.write("function EVENT_SPAWN(self)" + "\n")
-	FINAL.write("\t" + "self:hptrigger(90)" + "\n")
-	FINAL.write("end" + "\n" + "\n")
-elif uses_EVENT_HP and uses_flags:
-	FINAL.write("function EVENT_SPAWN(self)" + "\n")
-	FINAL.write("\t" + "self:hptrigger(90)" + "\n")
-	FINAL.write("\t" + "flagmobs = {}" + "\n")
-	FINAL.write("end" + "\n" + "\n")
-elif uses_flags:
-	FINAL.write("function EVENT_SPAWN(self)" + "\n")
-	FINAL.write("\t" + "flagmobs = {}" + "\n")
-	FINAL.write("end" + "\n" + "\n")
 	l.close()
+
+elif uses_EVENT_HP:
+	FINAL.write("function EVENT_SPAWN(self)" + "\n")
+	FINAL.write("\t" + "self:hptrigger(90)" + "\n")
+	FINAL.write("end" + "\n" + "\n")
 	
 try:
    with open(str(scriptnum) + 'SCRIPT' + ".tmp") as SCRIPT: pass
