@@ -147,6 +147,7 @@ def do_vars(s):
 	s = s.replace("$ustat(CR)","other:GetStat(\"cr\")")
 	s = s.replace("$ustat(PR)","other:GetStat(\"pr\")")
 	s = s.replace("$ustat(DR)","other:GetStat(\"dr\")")
+	s = s.replace("$status","other:GetAccountStatus()")
 	s = s.replace("$urace","other:GetRace()")
 	s = s.replace("$uclass","other:GetClass()")
 	s = s.replace("$userid","GetID(other)")
@@ -226,10 +227,10 @@ def do_msg_vars(s):
 	s = s.replace("$substring(9)","substring_9")
 	s = re.sub(r'\$calc\((.+)\)', r'" .. \1 .. "', s)
 	s = re.sub(r'\$flag\((\d+)\)', r'" .. other:GetFlag(\1) .. "', s)
-	s = s.replace("$sex ","\" .. sex() .. \"")
-	s = s.replace("$sex2","\" .. sex2() .. \"")
-	s = s.replace("$sex3","\" .. sex3() .. \"")
-	s = s.replace("$sex4","\" .. sex4() .. \"")
+	s = s.replace("$sex ","\" .. sex(other) .. \"")
+	s = s.replace("$sex2","\" .. sex2(other) .. \"")
+	s = s.replace("$sex3","\" .. sex3(other) .. \"")
+	s = s.replace("$sex4","\" .. sex4(other) .. \"")
 	s = s.replace("$race","\" .. other:GetRaceName() .. \"")
 	s = s.replace("$name","\" .. other:GetName() .. \"")
 	s = s.replace("$ulevel","\" .. other:GetLevel() .. \"")
@@ -706,6 +707,8 @@ for line, next_line in pairwise(f):
 				outfile.write("setappearance(" + filler + ")" + "\n")
 			elif f_line == "setsize":
 				outfile.write("self:setsize(" + filler + ")" + "\n")
+			elif f_line == "addfame":
+				outfile.write("other:addFame(" + filler + ")" + "\n")
 			elif f_line == "wipehate":
 				outfile.write("self:wipehate()" + "\n")
 			elif f_line == "fade":
