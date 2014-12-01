@@ -205,7 +205,7 @@ for s in g:
 g.close()
 
 for line in f:
-	if len(line) > 1 and line.lstrip()[1] == "#":
+	if len(line.lstrip()) > 1 and line.lstrip()[1] == "#":
 		continue
 	if not in_event and brackets < 1:
 		if re.search(r'^EVENT',line):
@@ -299,7 +299,7 @@ except IOError as e:
    print str(scriptnum) + " has no EVENT_SPAWN"
  
 if SPAWN:
-	system("handle_event.py " + scriptnum + " SPAWN")
+	system("python handle_event.py " + scriptnum + " SPAWN")
 	l = open(str(scriptnum) + 'SPAWN' + ".out",'r')
 	for line in l:
 		FINAL.write(line)
@@ -316,7 +316,7 @@ except IOError as e:
    print str(scriptnum) + " has no EVENT_SCRIPT"
  
 if SCRIPT:
-	system("handle_event.py " + scriptnum + " SCRIPT")
+	system("python handle_event.py " + scriptnum + " SCRIPT")
 	size = file_len(str(scriptnum) + 'SCRIPT' + ".out")
 	l = open(str(scriptnum) + 'SCRIPT' + ".out",'r')
 	if not uses_EVENT_TRIGGERALL:
@@ -337,7 +337,7 @@ except IOError as e:
    print str(scriptnum) + " has no EVENT_TRIGGERALL"
  
 if TRIGGERALL:
-	system("handle_event.py " + scriptnum + " TRIGGERALL")
+	system("python handle_event.py " + scriptnum + " TRIGGERALL")
 	size = file_len(str(scriptnum) + 'TRIGGERALL' + ".out")
 	l = open(str(scriptnum) + 'TRIGGERALL' + ".out",'r')
 	if not uses_EVENT_SCRIPT:
@@ -358,7 +358,7 @@ except IOError as e:
    print str(scriptnum) + " has no EVENT_SAY"
  
 if SAY:
-	system("handle_event.py " + scriptnum + " SAY")
+	system("python handle_event.py " + scriptnum + " SAY")
 	l = open(str(scriptnum) + 'SAY' + ".out",'r')
 	if not uses_EVENT_AGGROSAY:
 		for line in l:
@@ -378,7 +378,7 @@ except IOError as e:
    print str(scriptnum) + " has no EVENT_AGGROSAY"
  
 if AGGROSAY:
-	system("handle_event.py " + scriptnum + " AGGROSAY")
+	system("python handle_event.py " + scriptnum + " AGGROSAY")
 	l = open(str(scriptnum) + 'AGGROSAY' + ".out",'r')
 	if not uses_EVENT_SAY:
 		for line in l:
@@ -398,7 +398,7 @@ except IOError as e:
    print str(scriptnum) + " has no EVENT_ITEM"
  
 if ITEM:
-	system("handle_event.py " + scriptnum + " ITEM")
+	system("python handle_event.py " + scriptnum + " ITEM")
 	l = open(str(scriptnum) + 'ITEM' + ".out",'r')
 	for line in l:
 		FINAL.write(line)
@@ -410,7 +410,7 @@ except IOError as e:
    print str(scriptnum) + " has no EVENT_SIGNAL"
  
 if SIGNAL:
-	system("handle_event.py " + scriptnum + " SIGNAL")
+	system("python handle_event.py " + scriptnum + " SIGNAL")
 	l = open(str(scriptnum) + 'SIGNAL' + ".out",'r')
 	for line in l:
 		FINAL.write(line)
@@ -422,7 +422,7 @@ except IOError as e:
    print str(scriptnum) + " has no EVENT_COMBATEND"
  
 if COMBATEND:
-	system("handle_event.py " + scriptnum + " COMBATEND")
+	system("python handle_event.py " + scriptnum + " COMBATEND")
 	l = open(str(scriptnum) + 'COMBATEND' + ".out",'r')
 	for line in l:
 		FINAL.write(line)
@@ -434,7 +434,7 @@ except IOError as e:
    print str(scriptnum) + " has no EVENT_HP"
  
 if HP:
-	system("handle_event.py " + scriptnum + " HP")
+	system("python handle_event.py " + scriptnum + " HP")
 	l = open(str(scriptnum) + 'HP' + ".out",'r')
 	for line in l:
 		FINAL.write(line)
@@ -446,7 +446,7 @@ except IOError as e:
    print str(scriptnum) + " has no EVENT_DEATH"
  
 if DEATH:
-	system("handle_event.py " + scriptnum + " DEATH")
+	system("python handle_event.py " + scriptnum + " DEATH")
 	l = open(str(scriptnum) + 'DEATH' + ".out",'r')
 	for line in l:
 		FINAL.write(line)
@@ -458,7 +458,7 @@ except IOError as e:
    print str(scriptnum) + " has no EVENT_ATTACK"
  
 if ATTACK:
-	system("handle_event.py " + scriptnum + " ATTACK")
+	system("python handle_event.py " + scriptnum + " ATTACK")
 	l = open(str(scriptnum) + 'ATTACK' + ".out",'r')
 	for line in l:
 		FINAL.write(line)
@@ -470,7 +470,7 @@ except IOError as e:
    print str(scriptnum) + " has no EVENT_SLAY"
  
 if SLAY:
-	system("handle_event.py " + scriptnum + " SLAY")
+	system("python handle_event.py " + scriptnum + " SLAY")
 	l = open(str(scriptnum) + 'SLAY' + ".out",'r')
 	for line in l:
 		FINAL.write(line)
@@ -482,7 +482,7 @@ except IOError as e:
    print str(scriptnum) + " has no EVENT_SPELL"
  
 if SPELL:
-	system("handle_event.py " + scriptnum + " SPELL")
+	system("python handle_event.py " + scriptnum + " SPELL")
 	l = open(str(scriptnum) + 'SPELL' + ".out",'r')
 	for line in l:
 		FINAL.write(line)
@@ -823,17 +823,9 @@ if targets:
 
 FINAL.write("\n")
 FINAL.close()	
-system("tidy.py " + str(scriptnum))
+system("python tidy.py " + str(scriptnum))
 system("del " + str(scriptnum) + "*.tmp")
 system("del " + str(scriptnum) + "*.out")
 system("del " + str(scriptnum) + "*.old")
 # for if:
 # new_line = line[0:line.find('(')] + line[line.find('(')+ 1:line.find(')') + line[line.find(')') + 1:] + ' then'
-
-	
-	
-	
-	
-	
-	
-	
