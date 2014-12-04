@@ -1,5 +1,7 @@
 import sys 
 import re
+import os
+import glob
 from os import system
 
 scriptnum = 0
@@ -824,8 +826,16 @@ if targets:
 FINAL.write("\n")
 FINAL.close()	
 system("python tidy.py " + str(scriptnum))
-system("del " + str(scriptnum) + "*.tmp")
-system("del " + str(scriptnum) + "*.out")
-system("del " + str(scriptnum) + "*.old")
+#os.remove(str(scriptnum) + "*.tmp")
+#os.remove(str(scriptnum) + "*.out")
+#os.remove(str(scriptnum) + "*.old")
+#os.remove("FUNCTIONS.txt")
+filelist = glob.glob("*.tmp")
+filelist += glob.glob("*.out")
+filelist += glob.glob("*.old")
+filelist += glob.glob("FUNCTIONS.*")
+for f in filelist:
+    os.remove(f)
+
 # for if:
-# new_line = line[0:line.find('(')] + line[line.find('(')+ 1:line.find(')') + line[line.find(')') + 1:] + ' then'
+# new_line = line[0:line.find('(')] + line[line.find('(')+ 1:line.find(')') + line[line.find(')') + 1:] + ' then' 
