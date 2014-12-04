@@ -669,11 +669,11 @@ for line, next_line in pairwise(f):
 				item_id = filler[:int(filler.find(","))]
 				amt = int(filler[int(filler.find(","))+1:])
 				if amt > 0:
-					outfile.write("other:giveitem(" + filler + ")" + "\n")
+					outfile.write("other:giveItem(" + filler + ")" + "\n")
 				else:
-					outfile.write("other:giveitem(" + item_id + ")" + "\n")
+					outfile.write("other:giveItem(" + item_id + ")" + "\n")
 			elif f_line == "exp":
-				outfile.write("other:exp(" + filler + ")" + "\n")
+				outfile.write("other:giveExp(" + filler + ")" + "\n")
 			elif f_line == "signal":
 				npc_id = filler[:int(filler.find(","))]
 				val = filler[int(filler.find(","))+1:]
@@ -1209,11 +1209,11 @@ for line, next_line in pairwise(f):
 			elif f_line == "setflag":
 				filler = do_vars(filler)
 				filler = do_calcs(filler)
-				outfile.write("other:setflag(" + filler + ")" + "\n")
+				outfile.write("other:setFlag(" + filler + ")" + "\n")
 			elif f_line == "journal":
 				outfile.write("other:journal(" + filler + ")" + "\n")
 			elif f_line == "lawpoints":
-				outfile.write("other:setflag(4998, other:GetFlag(4998) + " + filler + ")" + "\n")
+				outfile.write("other:setFlag(4998, other:GetFlag(4998) + " + filler + ")" + "\n")
 			elif f_line == "hptrigger":
 				outfile.write("self:hptrigger(" + filler + ")" + "\n")
 			elif f_line == "flagreplace":
@@ -1306,7 +1306,7 @@ for line, next_line in pairwise(f):
 				filler = do_vars(filler)
 				flag_id = filler[:int(filler.find(","))]
 				amt = int(filler[int(filler.find(","))+1:])
-				outfile.write("other:setflag(" + str(flag_id) + ", other:GetFlag(" + str(flag_id) +") + (" + str(amt) + "))" + "\n")
+				outfile.write("other:setFlag(" + str(flag_id) + ", other:GetFlag(" + str(flag_id) +") + (" + str(amt) + "))" + "\n")
 			elif f_line == "setsubstring":
 				filler = do_calcs(filler)
 				filler = do_vars(filler)
@@ -1326,7 +1326,7 @@ for line, next_line in pairwise(f):
 				val2 = vars[2]
 				outfile.write("self:set(\"" + attribute + "\", " + val1 + ", " + val2 + ")" + "\n")
 			elif f_line == "chaospoints":
-				outfile.write("other:setflag(4999, other:GetFlag(4999) + " + filler + ")" + "\n")
+				outfile.write("other:setFlag(4999, other:GetFlag(4999) + " + filler + ")" + "\n")
 			elif f_line == "keepitem":
 				outfile.write("items_table(" + filler + ")" + "\n")
 			elif f_line == "destroycorpse":
